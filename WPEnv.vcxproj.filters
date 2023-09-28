@@ -252,6 +252,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
-    <None Include="LICENSE.txt" />
+    <None Include="LICENSE.md" />
   </ItemGroup>
 </Project>

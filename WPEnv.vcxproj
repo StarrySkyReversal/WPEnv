@@ -207,7 +207,7 @@
     <Image Include="WPEnv.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="LICENSE.txt" />
+    <None Include="LICENSE.md" />
     <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
