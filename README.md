@@ -1,4 +1,4 @@
-# My Integrated Software for PHP, MySQL, NGINX, and Apache
+# Integrated Software Suite for PHP, MySQL, NGINX, and Apache
 
 This project provides an integrated software solution for setting up PHP, MySQL, NGINX, and Apache on Windows, developed using Visual Studio 2022.
 
