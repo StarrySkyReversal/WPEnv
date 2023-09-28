@@ -1,0 +1,257 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Config">
+      <UniqueIdentifier>{3780abac-17ec-4af7-af37-041e3eb14545}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Controls">
+      <UniqueIdentifier>{26f48568-a3a5-4488-8e71-3a38dc332c5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\File">
+      <UniqueIdentifier>{df3217df-c135-45f7-893b-1644aebecaac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Download">
+      <UniqueIdentifier>{082f0be8-c0d0-412c-b262-4b09ba637563}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Config">
+      <UniqueIdentifier>{32565458-af5e-4686-a88b-af54ae99ccdb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Controls">
+      <UniqueIdentifier>{8242256c-c55f-4308-94f1-44679ce53579}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\File">
+      <UniqueIdentifier>{df8019d8-4318-4d9d-a9be-6cce7aa77212}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Download">
+      <UniqueIdentifier>{39d9fb48-1237-4851-98b4-4f68ceba857c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ServerMode">
+      <UniqueIdentifier>{7fe88618-c598-41d1-8acb-42f349d0e37b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ServerMode">
+      <UniqueIdentifier>{97fda5f5-02bd-467f-92bc-bac51b67515e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WPEnv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Compression.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="File\include\FileFindOpt.h">
+      <Filter>Header Files\File</Filter>
+    </ClInclude>
+    <ClInclude Include="File\include\BaseFileOpt.h">
+      <Filter>Header Files\File</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\include\FontStyle.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\include\ListBoxControls.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\include\ListViewControls.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\include\ProgressBarControls.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\include\RichEditControls.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\include\StaticLabelControls.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\include\TrayIconControls.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\include\WindowAdaptive.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\include\WindowLayout.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Config\include\ServiceUse.h">
+      <Filter>Header Files\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="Config\include\ServiceSource.h">
+      <Filter>Header Files\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="Download\include\DownloadThread.h">
+      <Filter>Header Files\Download</Filter>
+    </ClInclude>
+    <ClInclude Include="Download\include\DownloadCenter.h">
+      <Filter>Header Files\Download</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\include\ButtonControls.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerMode\include\ModeMonitor.h">
+      <Filter>Header Files\ServerMode</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerMode\include\ProcessMode.h">
+      <Filter>Header Files\ServerMode</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerMode\include\ProcessOpt.h">
+      <Filter>Header Files\ServerMode</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerMode\include\ServiceMode.h">
+      <Filter>Header Files\ServerMode</Filter>
+    </ClInclude>
+    <ClInclude Include="Download\include\DownloadQueue.h">
+      <Filter>Header Files\Download</Filter>
+    </ClInclude>
+    <ClInclude Include="Download\include\CircularQueue.h">
+      <Filter>Header Files\Download</Filter>
+    </ClInclude>
+    <ClInclude Include="File\include\FileModify.h">
+      <Filter>Header Files\File</Filter>
+    </ClInclude>
+    <ClInclude Include="File\include\FindPattern.h">
+      <Filter>Header Files\File</Filter>
+    </ClInclude>
+    <ClInclude Include="Download\include\CurlRequestOpt.h">
+      <Filter>Header Files\Download</Filter>
+    </ClInclude>
+    <ClInclude Include="Download\include\StackOpt.h">
+      <Filter>Header Files\Download</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="WPEnv.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Compression.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="File\src\FileFindOpt.cpp">
+      <Filter>Source Files\File</Filter>
+    </ClCompile>
+    <ClCompile Include="File\src\BaseFileOpt.cpp">
+      <Filter>Source Files\File</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\src\ButtonControls.cpp">
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\src\FontStyle.cpp">
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\src\ListBoxControls.cpp">
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\src\ListViewControls.cpp">
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\src\ProgressBarControls.cpp">
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\src\RichEditControls.cpp">
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\src\TrayIconControls.cpp">
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\src\WindowAdaptive.cpp">
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\src\WindowLayout.cpp">
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Download\src\DownloadCenter.cpp">
+      <Filter>Source Files\Download</Filter>
+    </ClCompile>
+    <ClCompile Include="Download\src\DownloadThread.cpp">
+      <Filter>Source Files\Download</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerMode\src\ModeMonitor.cpp">
+      <Filter>Source Files\ServerMode</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerMode\src\ProcessMode.cpp">
+      <Filter>Source Files\ServerMode</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerMode\src\ProcessOpt.cpp">
+      <Filter>Source Files\ServerMode</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerMode\src\ServiceMode.cpp">
+      <Filter>Source Files\ServerMode</Filter>
+    </ClCompile>
+    <ClCompile Include="Config\src\ServiceUse.cpp">
+      <Filter>Source Files\Config</Filter>
+    </ClCompile>
+    <ClCompile Include="Config\src\ServiceSource.cpp">
+      <Filter>Source Files\Config</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\src\StaticLabelControls.cpp">
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Download\src\DownloadQueue.cpp">
+      <Filter>Source Files\Download</Filter>
+    </ClCompile>
+    <ClCompile Include="Download\src\CircularQueue.cpp">
+      <Filter>Source Files\Download</Filter>
+    </ClCompile>
+    <ClCompile Include="File\src\FileModify.cpp">
+      <Filter>Source Files\File</Filter>
+    </ClCompile>
+    <ClCompile Include="File\src\FindPattern.cpp">
+      <Filter>Source Files\File</Filter>
+    </ClCompile>
+    <ClCompile Include="Download\src\CurlRuquestOpt.cpp">
+      <Filter>Source Files\Download</Filter>
+    </ClCompile>
+    <ClCompile Include="Download\src\StackOpt.cpp">
+      <Filter>Source Files\Download</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WPEnv.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="WPEnv.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+    <None Include="LICENSE.txt" />
+  </ItemGroup>
+</Project>

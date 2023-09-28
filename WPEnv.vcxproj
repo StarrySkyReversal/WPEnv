@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{80278d8f-91d8-4c02-949f-a36cf8ddddaf}</ProjectGuid>
+    <RootNamespace>WPEnv</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir);$(SolutionDir)/Download/include;$(SolutionDir)/Config/include;$(SolutionDir)/Controls/include;$(SolutionDir)/File/include;$(SolutionDir)/ServerMode/include</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir);$(SolutionDir)/Download/include;$(SolutionDir)/Config/include;$(SolutionDir)/Controls/include;$(SolutionDir)/File/include;$(SolutionDir)/ServerMode/include</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Download\include\CircularQueue.h" />
+    <ClInclude Include="Download\include\CurlRequestOpt.h" />
+    <ClInclude Include="Download\include\DownloadQueue.h" />
+    <ClInclude Include="File\include\FileModify.h" />
+    <ClInclude Include="File\include\BaseFileOpt.h" />
+    <ClInclude Include="Controls\include\ButtonControls.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="Compression.h" />
+    <ClInclude Include="Download\include\DownloadCenter.h" />
+    <ClInclude Include="Download\include\DownloadThread.h" />
+    <ClInclude Include="File\include\FileFindOpt.h" />
+    <ClInclude Include="Controls\include\FontStyle.h" />
+    <ClInclude Include="File\include\FindPattern.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="Controls\include\ListBoxControls.h" />
+    <ClInclude Include="Controls\include\ListViewControls.h" />
+    <ClInclude Include="Log.h" />
+    <ClInclude Include="ServerMode\include\ModeMonitor.h" />
+    <ClInclude Include="ServerMode\include\ProcessMode.h" />
+    <ClInclude Include="ServerMode\include\ProcessOpt.h" />
+    <ClInclude Include="Controls\include\ProgressBarControls.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="Controls\include\RichEditControls.h" />
+    <ClInclude Include="ServerMode\include\ServiceMode.h" />
+    <ClInclude Include="Config\include\ServiceSource.h" />
+    <ClInclude Include="Config\include\ServiceUse.h" />
+    <ClInclude Include="Controls\include\StaticLabelControls.h" />
+    <ClInclude Include="Download\include\StackOpt.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="Controls\include\TrayIconControls.h" />
+    <ClInclude Include="Controls\include\WindowAdaptive.h" />
+    <ClInclude Include="Controls\include\WindowLayout.h" />
+    <ClInclude Include="WPEnv.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Download\src\CircularQueue.cpp" />
+    <ClCompile Include="Download\src\CurlRuquestOpt.cpp" />
+    <ClCompile Include="Download\src\DownloadQueue.cpp" />
+    <ClCompile Include="File\src\FileModify.cpp" />
+    <ClCompile Include="File\src\BaseFileOpt.cpp" />
+    <ClCompile Include="Controls\src\ButtonControls.cpp" />
+    <ClCompile Include="Common.cpp" />
+    <ClCompile Include="Compression.cpp" />
+    <ClCompile Include="Download\src\DownloadCenter.cpp" />
+    <ClCompile Include="Download\src\DownloadThread.cpp" />
+    <ClCompile Include="File\src\FileFindOpt.cpp" />
+    <ClCompile Include="Controls\src\FontStyle.cpp" />
+    <ClCompile Include="Controls\src\ListBoxControls.cpp" />
+    <ClCompile Include="Controls\src\ListViewControls.cpp" />
+    <ClCompile Include="File\src\FindPattern.cpp" />
+    <ClCompile Include="Log.cpp" />
+    <ClCompile Include="ServerMode\src\ModeMonitor.cpp" />
+    <ClCompile Include="ServerMode\src\ProcessMode.cpp" />
+    <ClCompile Include="ServerMode\src\ProcessOpt.cpp" />
+    <ClCompile Include="Controls\src\ProgressBarControls.cpp" />
+    <ClCompile Include="Controls\src\RichEditControls.cpp" />
+    <ClCompile Include="ServerMode\src\ServiceMode.cpp" />
+    <ClCompile Include="Config\src\ServiceSource.cpp" />
+    <ClCompile Include="Config\src\ServiceUse.cpp" />
+    <ClCompile Include="Controls\src\StaticLabelControls.cpp" />
+    <ClCompile Include="Controls\src\TrayIconControls.cpp" />
+    <ClCompile Include="Controls\src\WindowAdaptive.cpp" />
+    <ClCompile Include="Controls\src\WindowLayout.cpp" />
+    <ClCompile Include="Download\src\StackOpt.cpp" />
+    <ClCompile Include="WPEnv.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WPEnv.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico" />
+    <Image Include="WPEnv.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LICENSE.txt" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
