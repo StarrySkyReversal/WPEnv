@@ -203,10 +203,12 @@
     <ResourceCompile Include="WPEnv.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="application_ui.jpg" />
     <Image Include="small.ico" />
     <Image Include="WPEnv.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="LICENSE.md" />
     <None Include="README.md" />
   </ItemGroup>

@@ -249,9 +249,13 @@
     <Image Include="WPEnv.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="application_ui.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
     <None Include="LICENSE.md" />
+    <None Include=".gitignore" />
   </ItemGroup>
 </Project>
