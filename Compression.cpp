@@ -88,7 +88,7 @@ int extract_zip_file(const wchar_t* zip_filename, const wchar_t* serviceType, co
         return -3;
     }
 
-    // 创建临时目录
+    // Create temporary directory
     if (!CreateDirectory(tempVersionDirectory, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
         LogAndMsgBox(L"Failed to create temporary directory %ls\r\n", tempVersionDirectory);
         return -3;
