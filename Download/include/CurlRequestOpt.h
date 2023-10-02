@@ -16,6 +16,12 @@ extern Queue* workerQueueArray;
 
 extern int abnormalCount;
 
+extern int numDynamicSubPartSize;
+
+extern int numLockFlow;
+
+extern HANDLE hEvent;
+
 unsigned long long CurlGetRemoteFileSize(const wchar_t* url);
 
 DWORD CurlMultipleDownloadThread(LPVOID param, int numDynamicSubPartSize);

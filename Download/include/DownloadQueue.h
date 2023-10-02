@@ -5,15 +5,15 @@
 //#define QUEUE_SIZE 128
 
 typedef struct {
-    DownloadPart** items;
+    DownloadPart* items;
     int front, rear, size, capacity;
 } Queue;
 
 bool initializeQueue(Queue* q, int queueSize);
 
-bool enqueue(Queue* q, DownloadPart* item);
+bool enqueue(Queue* q, DownloadPart item);
 
-bool dequeue(Queue* q, DownloadPart** item);
+bool dequeue(Queue* q, DownloadPart* item);
 
 bool queueIsEmpty(Queue* q);
 

@@ -11,7 +11,9 @@ struct DownloadPart {
     FILE* file;
     CURL* easy_handle;
 
-    unsigned long indexCategory;
+    unsigned long index;
+    //unsigned long retryCount;
+    //unsigned long abnormalCount;
 
     unsigned long long startByte;
     unsigned long long endByte;
@@ -21,6 +23,7 @@ struct DownloadPart {
     unsigned long long totalBytesLength;
 
     unsigned int status;
+    int statusCode;
     unsigned long long timestamp;
 };
 
