@@ -20,12 +20,6 @@
 
 #define MAX_THREAD_NUM 8
 
-//typedef struct {
-//    DownloadPart* parts;
-//    int size;
-//    int capacity;
-//} DynamicArray;
-
 unsigned long long totalSize;
 unsigned long long downlodedTotalSize = 0;
 
@@ -40,9 +34,8 @@ bool bStartMonitor = false;
 
 HANDLE hEvent;
 
-//DynamicArray successfulDownloads;
 Queue* workerQueueArray;
-//CircularQueue circularQueueArray;
+
 Stack* threadStackArray;
 
 DownloadPart** globalPartGroup;
@@ -176,23 +169,6 @@ DWORD WINAPI DaemonDownloadThread(LPVOID param) {
         EnterCriticalSection(&progressCriticalSection);
         while (counterSizeOrIndex < numDynamicSubPartSize) {
             if (numLockFlow >= numLockFlowMax) {
-                //if (abnormalCount <= 1) {
-                //    numLockFlowMax += 1;
-                //}
-                //else if (abnormalCount > 1) {
-                //    numLockFlowMax -= abnormalCount;
-                //    if (numLockFlowMax < 16) {
-                //        numLockFlowMax = 16;
-                //    }
-                //}
-
-                //if (numLockFlowMax > 128) {
-                //    numLockFlowMax = 128;
-                //}
-
-                //Log("numLockFlowMax:%d\r\n", numLockFlowMax);
-
-                //abnormalCount = 0;
                 break;
             }
 
@@ -440,8 +416,6 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
         Log("Thread stack memory error.\r\n");
         return 0;
     }
-
-    //initDynamicArray(&successfulDownloads, 1);
 
     ULONGLONG partSize = totalSize / totalPartSize;
     if (partSize > ULONG_MAX) {

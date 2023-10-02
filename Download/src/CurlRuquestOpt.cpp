@@ -11,13 +11,13 @@
 #include <io.h>
 
 char* my_strndup(const char* s, size_t n) {
-	size_t len = strnlen(s, n);  // 计算字符串的长度，但不超过n
-	char* new_str = (char*)malloc(len + 1);  // 分配足够的空间（加1是为了null terminator）
+	size_t len = strnlen(s, n);
+	char* new_str = (char*)malloc(len + 1);
 	if (new_str == NULL) {
-		return NULL;  // 内存分配失败
+		return NULL;
 	}
-	strncpy_s(new_str, len + 1, s, len);  // 复制字符串
-	new_str[len] = '\0';  // 添加null terminator
+	strncpy_s(new_str, len + 1, s, len);
+	new_str[len] = '\0';
 	return new_str;
 }
 
@@ -44,20 +44,17 @@ size_t subpart_write_data(void* buffer, size_t size, size_t nmemb, void* userp) 
 
 size_t header_status_callback(char* buffer, size_t size, size_t nitems, void* userdata) {
 	DownloadPart* part = (DownloadPart*)userdata;
-	char* response_line = my_strndup(buffer, size * nitems);  // 使用自定义的my_strndup函数
+	char* response_line = my_strndup(buffer, size * nitems);  // Use custom my_strndup function
 
 	if (response_line != NULL) {
-		// 如果这一行包含 HTTP 状态码
 		if (strstr(response_line, "HTTP/") == response_line) {
-			// 获取状态码
-			char* status_code_str = strchr(response_line, ' ') + 1; // 跳过"HTTP/1.1" 
-			int status_code = atoi(status_code_str);  // 转换状态码为整数
+			char* status_code_str = strchr(response_line, ' ') + 1; // Skip "HTTP/1.1"
+			int status_code = atoi(status_code_str);
 
-			// 检查状态码是否在 200-299 的范围内
 			part->statusCode = status_code;
 		}
 
-		free(response_line);  // 不要忘记释放之前分配的内存
+		free(response_line);
 	}
 
 	return size * nitems;
@@ -159,17 +156,6 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 	} while (still_running);
 
 	//fclose(debugFile);
-
-	//for (int i = 0; i < numSubPartSize; i++) {
-	//	curl_multi_remove_handle(multi_handle, partGroup[i]->easy_handle);
-	//	curl_easy_cleanup(partGroup[i]->easy_handle);
-	//	fclose(partGroup[i]->file);
-
-	//	if ((partGroup[i]->endByte - partGroup[i]->startByte + 1) != partGroup[i]->readBytes) {
-	//		Log("FileError:%ls;readBytes:%llu;totalSize:%llu;\r\n",
-	//			partGroup[i]->filename, partGroup[i]->readBytes, (partGroup[i]->endByte - partGroup[i]->startByte + 1));
-	//	}
-	//}
 
 	curl_slist_free_all(headers);
 	curl_multi_cleanup(multi_handle);
