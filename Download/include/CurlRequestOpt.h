@@ -22,6 +22,8 @@ extern int numLockFlow;
 
 extern HANDLE hEvent;
 
+extern int numLockFlowMax;
+
 unsigned long long CurlGetRemoteFileSize(const wchar_t* url);
 
 DWORD CurlMultipleDownloadThread(LPVOID param, int numDynamicSubPartSize);

@@ -306,10 +306,9 @@ void CreateButtonControls(HWND hWnd, HINSTANCE hInstance) {
         hInstance,
         nullptr);
 
-
     hButtonRemove = CreateWindow(
         L"BUTTON",
-        L"\u274C",
+        L"\u2796",
         WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
         50 + 4 * (buttonWidth + spacing * 7),
         0 + listBoxPlusSpacing + 170,
