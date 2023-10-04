@@ -117,12 +117,12 @@ DWORD WINAPI DaemonMonitorThread(LPVOID param) {
 
         if (bStartMonitor == true) {    // Start monitor thread state
             EnterCriticalSection(&progressCriticalSection);
-            if (abnormalCount > 1) {
-                numLockFlowMax -= abnormalCount;
+            if (abnormalCount > 0) {
+                numLockFlowMax -= (abnormalCount * 2);
                 abnormalCount = 0;
             }
             else {
-                numLockFlowMax += 1;
+                numLockFlowMax += 1;    // only addition
             }
 
             if (numLockFlowMax < 16) {
@@ -179,7 +179,6 @@ DWORD WINAPI DaemonDownloadThread(LPVOID param) {
                 int tempSize = (counterSizeOrIndex + 1);
                 partGroup = (DownloadPart**)realloc(partGroup, tempSize * sizeof(DownloadPart*));
 
-                globalPartGroup[tempPart.index]->statusCode = -1;
                 globalPartGroup[tempPart.index]->timestamp = GetTickCount64();
                 partGroup[counterSizeOrIndex] = globalPartGroup[tempPart.index];
 
@@ -195,17 +194,18 @@ DWORD WINAPI DaemonDownloadThread(LPVOID param) {
         if (counterSizeOrIndex > 0) {
             CurlMultipleDownloadThread(partGroup, counterSizeOrIndex);
 
+            //SetEvent(hEvent);
+
             for (int i = 0; i < counterSizeOrIndex; i++) {
                 if (partGroup[i]->status == -1) {
                     EnterCriticalSection(&progressCriticalSection);
                     partGroup[i]->status = 0;   // reset retry mark
-                    abnormalCount += 1;
+                    partGroup[i]->statusCode = -1;
+                    
                     enqueue(workerQueueArray, *partGroup[i]);
                     LeaveCriticalSection(&progressCriticalSection);
                 }
             }
-
-            SetEvent(hEvent);
         }
 
         free(partGroup);
@@ -384,6 +384,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
     numDownloadThreadsSize = 0;
     bStartMonitor = false;
 
+    numLockFlow = 0;
     numLockFlowMax = 16;
 
     if (!DirectoryExists(DIRECTORY_DOWNLOAD)) {

@@ -25,8 +25,8 @@ size_t subpart_write_data(void* buffer, size_t size, size_t nmemb, void* userp) 
 	DownloadPart* part = (DownloadPart*)userp;
 
 	if (part->statusCode != 206) {
-		Log("file:%ls; nmemb:%llu; currentBytes:%llu;totalBytes:%llu; statusCode:%d\r\n",
-			part->filename, nmemb, part->currentStartByte, part->totalBytesLength, part->statusCode);
+		//Log("file:%ls; nmemb:%llu; currentBytes:%llu;totalBytes:%llu; statusCode:%d\r\n",
+		//	part->filename, nmemb, part->currentStartByte, part->totalBytesLength, part->statusCode);
 		return 0;
 	}
 
@@ -83,7 +83,7 @@ void SetCurlComponent(const char* url, DownloadPart* part, curl_slist* headers) 
 	curl_easy_setopt(part->easy_handle, CURLOPT_AUTOREFERER, 1L);
 	curl_easy_setopt(part->easy_handle, CURLOPT_FORBID_REUSE, 1L);
 	curl_easy_setopt(part->easy_handle, CURLOPT_NOSIGNAL, 1L);
-	curl_easy_setopt(part->easy_handle, CURLOPT_CONNECTTIMEOUT, 3L);
+	curl_easy_setopt(part->easy_handle, CURLOPT_CONNECTTIMEOUT, 5L);
 	curl_easy_setopt(part->easy_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 	curl_easy_setopt(part->easy_handle, CURLOPT_SSL_VERIFYHOST, 0L);
 }
@@ -114,7 +114,7 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 		//CURL* easy_handle;
 		SetCurlComponent(url, partGroup[i], headers);
 
-		Log("timestamp: %llu;count_filename:%ls\r\n", partGroup[i]->timestamp, partGroup[i]->filepath);
+		//Log("timestamp: %llu;count_filename:%ls\r\n", partGroup[i]->timestamp, partGroup[i]->filepath);
 		if (_wfopen_s(&partGroup[i]->file, partGroup[i]->filepath, L"ab")) {  // ab
 			Log("timestamp: %llu;Failed to open file: %ls errorCode:%d\r\n", partGroup[i]->timestamp, partGroup[i]->filepath, GetLastError());
 			break;
@@ -131,31 +131,47 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 		CURLMsg* m;
 		while ((m = curl_multi_info_read(multi_handle, &num_messages))) {
 			if (m->msg == CURLMSG_DONE) {
-				for (int i = 0; i < numSubPartSize; i++) {
+				int finishCount = 0;
+				for (int i = 0; i < numSubPartSize; i++)
+				{
 					if (partGroup[i]->easy_handle == m->easy_handle) {
-
+						// judge is last element
 						if (m->data.result != CURLE_OK) {
 							Log("CURLE_ERROR:%s\r\n", curl_easy_strerror(m->data.result));
 							EnterCriticalSection(&progressCriticalSection);
+							abnormalCount += 1;
+
 							// mark next retry
 							partGroup[i]->status = -1;
 							LeaveCriticalSection(&progressCriticalSection);
-						}
 
-						curl_multi_remove_handle(multi_handle, partGroup[i]->easy_handle);
-						curl_easy_cleanup(partGroup[i]->easy_handle);
-						fclose(partGroup[i]->file);
+							partGroup[i]->statusCode = 0;
+						}
 
 						EnterCriticalSection(&progressCriticalSection);
 						numLockFlow -= 1;
 						LeaveCriticalSection(&progressCriticalSection);
 					}
+
+					if (partGroup[i]->statusCode != -1) {
+						finishCount += 1;
+					}
+				}
+
+				if (finishCount == numSubPartSize) {
+					SetEvent(hEvent);
 				}
 			}
 		}
 	} while (still_running);
 
 	//fclose(debugFile);
+
+	for (int i = 0; i < numSubPartSize; i++) {
+		curl_multi_remove_handle(multi_handle, partGroup[i]->easy_handle);
+		curl_easy_cleanup(partGroup[i]->easy_handle);
+		fclose(partGroup[i]->file);
+	}
 
 	curl_slist_free_all(headers);
 	curl_multi_cleanup(multi_handle);
