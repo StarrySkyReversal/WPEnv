@@ -497,6 +497,7 @@ DWORD WINAPI DaemonMonitorService(LPVOID lParam) {
     bool isFirstRun = true;
 
     while (true) {
+        EnterCriticalSection(&daemonMonitorServiceCs);
         //const wchar_t* processes[] = { L"php-cgi.exe", L"mysqld.exe", L"httpd.exe", L"nginx.exe"};
         const wchar_t* phpProcesses[] = { L"php-cgi.exe"};
         const wchar_t* mysqlProcesses[] = { L"mysqld.exe" };
@@ -545,14 +546,16 @@ DWORD WINAPI DaemonMonitorService(LPVOID lParam) {
             bNginxRunning = false;
         }
 
-        Sleep(2000);
-
         previousPHPHash = currentPHPHash;
         previousMysqlHash = currentMysqlHash;
         previousApacheHash = currentApacheHash;
         previousNginxHash = currentNginxHash;
 
         isFirstRun = false;
+
+        LeaveCriticalSection(&daemonMonitorServiceCs);
+
+        Sleep(500);
     }
 
     return 0;
@@ -620,6 +623,8 @@ void CloseDaemonService() {
         return;
     }
 
+    EnterCriticalSection(&daemonMonitorServiceCs);
+
     ProcessDetail pProcessDetail;
 
     wchar_t cmdService[256] = { '\0' };
@@ -631,6 +636,8 @@ void CloseDaemonService() {
         pProcessDetail.cmd = cmdService;
         pProcessDetail.dir = webDaemonServiceInstance.webServiceExeDirectory;
         CallDeleteProcess(pProcessDetail);
+
+        bNginxRunning = false;
     }
     else {
         // Terminating the Apache process requires administrator privileges.
@@ -641,6 +648,8 @@ void CloseDaemonService() {
         //pProcessDetail.dir = webDaemonServiceInstance.webServiceExeDirectory;
         pProcessDetail.dir = L"C:/Windows/system/";
         CallDeleteProcess(pProcessDetail);
+
+        bApacheRunning = false;
     }
 
     pProcessDetail.serviceName = L"Mysql";
@@ -649,11 +658,15 @@ void CloseDaemonService() {
     pProcessDetail.dir = L"C:/Windows/system/";
     CallDeleteProcess(pProcessDetail);
 
+    bMysqlRunning = false;
+
     pProcessDetail.serviceName = L"PHP";
     pProcessDetail.processName = L"php-cgi.exe";
     pProcessDetail.cmd = L"taskkill.exe /F /IM php-cgi.exe";
     pProcessDetail.dir = L"C:/Windows/system/";
     CallDeleteProcess(pProcessDetail);
+
+    bPHPRunning = false;
 
     if (hJob) {
         // This function terminates all processes within the job.
@@ -678,10 +691,7 @@ void CloseDaemonService() {
     EnableWindow(GetDlgItem(hWndMain, IDC_LISTBOX_CONFIG), TRUE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_REMOVE_CONFIG), TRUE);
 
-    bPHPRunning = false;
-    bMysqlRunning = false;
-    bApacheRunning = false;
-    bNginxRunning = false;
+    LeaveCriticalSection(&daemonMonitorServiceCs);
 }
 
 void RestartDaemonService() {

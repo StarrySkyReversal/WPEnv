@@ -5,8 +5,6 @@
 #include "ModeMonitor.h"
 #include "Log.h"
 
-#define MAX_PROCESSES 1024
-
 // A function to compare two wide strings, used for qsort.
 int wcompare(const void* a, const void* b) {
     return wcscmp(*(wchar_t**)a, *(wchar_t**)b);

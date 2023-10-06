@@ -3,7 +3,7 @@
 #include "Resource.h"
 
 extern HWND hWndMain;
-
+extern CRITICAL_SECTION daemonMonitorServiceCs;
 
 DWORD StartDaemonService();
 void CloseDaemonService();
