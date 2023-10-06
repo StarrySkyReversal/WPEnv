@@ -118,7 +118,7 @@ DWORD WINAPI DaemonMonitorThread(LPVOID param) {
         if (bStartMonitor == true) {    // Start monitor thread state
             EnterCriticalSection(&progressCriticalSection);
             if (abnormalCount > 0) {
-                numLockFlowMax -= (abnormalCount * 2);
+                numLockFlowMax -= abnormalCount * 2;
                 abnormalCount = 0;
             }
             else {
