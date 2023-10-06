@@ -122,16 +122,11 @@ DWORD WINAPI DaemonMonitorThread(LPVOID param) {
                 abnormalCount = 0;
             }
             else {
-                numLockFlowMax += 1;    // only addition
+                numLockFlowMax += 2;    // only addition
             }
 
-            if (numLockFlowMax < 16) {
-                numLockFlowMax = 16;
-            }
-
-            if (numLockFlowMax > 128) {
-                numLockFlowMax = 128;
-            }
+            if (numLockFlowMax < 16) numLockFlowMax = 16;
+            if (numLockFlowMax > 128) numLockFlowMax = 128;
 
             Log("numLockFlowMax:%d\r\n", numLockFlowMax);
 
@@ -378,7 +373,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
     downlodedTotalSize = 0;
     numDynamicSubPartSize = 16;
 
-    abnormalCloseThreadCount = 0;       // Count of threads exiting due to exception
+    //abnormalCloseThreadCount = 0;       // Count of threads exiting due to exception
     abnormalCount = 0;
 
     numDownloadThreadsSize = 0;
@@ -394,6 +389,12 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
     // SSL library multithreading
     CRYPTO_set_locking_callback(win32_locking_callback);
 
+    // Starting download soon
+
+    //AppendEditInfo(L"Starting download soon");
+    wchar_t infoTip[256] = L"\0";
+    swprintf_s(infoTip, sizeof(infoTip) / sizeof(wchar_t), L"INFO: Initiating download of %ls\r\n", pSoftwareInfo->version);
+    AppendEditInfo(infoTip);
     curl_global_init(CURL_GLOBAL_ALL);
     totalSize = CurlGetRemoteFileSize(pSoftwareInfo->link);
     curl_global_cleanup();
@@ -472,7 +473,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
 
         if (
             numDownloadThreadsSize == MAX_THREAD_NUM
-            || abnormalCloseThreadCount > 0 // if the process is terminated, it means that the process can no longer be created.
+            //|| abnormalCloseThreadCount > 0 // if the process is terminated, it means that the process can no longer be created.
             ) {
             LeaveCriticalSection(&progressCriticalSection);
             break;

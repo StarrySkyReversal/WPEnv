@@ -25,6 +25,7 @@
 
 // Global Window Handle For Main
 HWND hWndMain;
+CRITICAL_SECTION daemonMonitorServiceCs;
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -231,6 +232,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_SHOWWINDOW:
     {
+        InitializeCriticalSection(&daemonMonitorServiceCs);
+
         HANDLE daemonService = CreateThread(NULL, 0, DaemonMonitorService, NULL, 0, NULL);
         if (daemonService) {
             CloseHandle(daemonService);
@@ -364,6 +367,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         MinimizeToTray(hWnd);
         break;
     case WM_DESTROY:
+        DeleteCriticalSection(&daemonMonitorServiceCs);
+
         FreeControlRectArray();
         FreeRichEdit();
         RemoveTrayIcon(&nid);
