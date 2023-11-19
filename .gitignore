@@ -4,3 +4,5 @@
 
 /.vs/WPEnv
 /x64/Debug
+/x64/Release
+/WPEnv.aps
