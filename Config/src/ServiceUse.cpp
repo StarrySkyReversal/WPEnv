@@ -499,12 +499,36 @@ void syncPHPConfigFile(SoftwareInfo softwareInfo) {
 
     // copy php.ini-development to php.ini
     if (copyFile(phpIniFilePathSource, phpIniFilePathDest) == 0) {
-        char phpIniMysqli[] = ";extension=mysqli";
-        if (modify_conf_utf8AndAscii(phpIniFilePathDest, "extension=mysqli", phpIniMysqli) == 0) {
+        char phpIniExtCurl[] = "extension=curl";
+        if (modify_conf_utf8AndAscii(phpIniFilePathDest, ";extension=curl", phpIniExtCurl) == 0) {
         }
 
-        char phpIniPdoMysql[] = ";extension=pdo_mysql";
-        if (modify_conf_utf8AndAscii(phpIniFilePathDest, "extension=pdo_mysql", phpIniPdoMysql) == 0) {
+        char phpIniExtFileInfo[] = "extension=fileinfo";
+        if (modify_conf_utf8AndAscii(phpIniFilePathDest, ";extension=fileinfo", phpIniExtFileInfo) == 0) {
+        }
+
+        char phpIniExtGd[] = "extension=gd";
+        if (modify_conf_utf8AndAscii(phpIniFilePathDest, ";extension=gd", phpIniExtGd) == 0) {
+        }
+
+        char phpIniExtMbString[] = "extension=mbstring";
+        if (modify_conf_utf8AndAscii(phpIniFilePathDest, ";extension=mbstring", phpIniExtMbString) == 0) {
+        }
+
+        char phpIniExtOpenssl[] = "extension=openssl";
+        if (modify_conf_utf8AndAscii(phpIniFilePathDest, ";extension=openssl", phpIniExtOpenssl) == 0) {
+        }
+
+        char phpIniExtMysqli[] = "extension=mysqli";
+        if (modify_conf_utf8AndAscii(phpIniFilePathDest, ";extension=mysqli", phpIniExtMysqli) == 0) {
+        }
+
+        char phpIniExtPdoMysql[] = "extension=pdo_mysql";
+        if (modify_conf_utf8AndAscii(phpIniFilePathDest, ";extension=pdo_mysql", phpIniExtPdoMysql) == 0) {
+        }
+
+        char phpIniExtZip[] = "extension=zip";
+        if (modify_conf_utf8AndAscii(phpIniFilePathDest, ";extension=zip", phpIniExtZip) == 0) {
         }
     }
 }
