@@ -499,6 +499,13 @@ void syncPHPConfigFile(SoftwareInfo softwareInfo) {
 
     // copy php.ini-development to php.ini
     if (copyFile(phpIniFilePathSource, phpIniFilePathDest) == 0) {
+        char phpIniMysqli[] = ";extension=mysqli";
+        if (modify_conf_utf8AndAscii(phpIniFilePathDest, "extension=mysqli", phpIniMysqli) == 0) {
+        }
+
+        char phpIniPdoMysql[] = ";extension=pdo_mysql";
+        if (modify_conf_utf8AndAscii(phpIniFilePathDest, "extension=pdo_mysql", phpIniPdoMysql) == 0) {
+        }
     }
 }
 
