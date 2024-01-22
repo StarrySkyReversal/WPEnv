@@ -63,7 +63,7 @@ int modify_conf(const wchar_t* filename, const wchar_t* old_content, const wchar
     return 0;
 }
 
-int modify_conf_utf8AndAscii(const char* filename, const char* old_content, const char* new_content) {
+int modify_conf_utf8AndAscii(const char* filename, const char* old_content, const char* new_content, int replace_all = false) {
     FILE* file;
     if (fopen_s(&file, filename, "rb+") != 0 || file == NULL) {
         printf("Error opening file: %s\n", filename);
@@ -72,7 +72,6 @@ int modify_conf_utf8AndAscii(const char* filename, const char* old_content, cons
 
     fseek(file, 0, SEEK_END);
     size_t file_size = (size_t)_ftelli64(file);
-    Log("Post-read position: %lld\r\n", file_size);
     if (file_size < 0) {
         printf("Error getting file size.\n");
         fclose(file);
@@ -89,7 +88,6 @@ int modify_conf_utf8AndAscii(const char* filename, const char* old_content, cons
     }
 
     size_t bytesRead = fread_s(buffer, file_size, sizeof(char), file_size, file);
-
     if (bytesRead != file_size) {
         perror("Error reading file");
         free(buffer);
@@ -98,36 +96,35 @@ int modify_conf_utf8AndAscii(const char* filename, const char* old_content, cons
     }
     buffer[file_size] = '\0';
 
-    char* found = strstr(buffer, old_content);
-
-    if (found) {
-        long long offset = found - buffer;
-        FILE* temp_file;
-        if (tmpfile_s(&temp_file) != 0 || temp_file == NULL) {
-            perror("Error creating temp file");
-            free(buffer);
-            fclose(file);
-            return -1;
-        }
-
-        fwrite(buffer, 1, offset, temp_file);
-        fwrite(new_content, 1, strlen(new_content), temp_file);
-        fwrite(found + strlen(old_content), 1, file_size - offset - strlen(old_content), temp_file);
-
-        fseek(temp_file, 0, SEEK_SET);
-        fseek(file, 0, SEEK_SET);
-        char ch;
-        while (fread_s(&ch, sizeof(ch), 1, 1, temp_file) == 1) {
-            fwrite(&ch, 1, 1, file);
-        }
-
-        fclose(temp_file);
-    }
-    else {
-        fseek(file, 0, SEEK_END);
-        fprintf_s(file, "\n%s", new_content);
+    FILE* temp_file;
+    if (tmpfile_s(&temp_file) != 0 || temp_file == NULL) {
+        perror("Error creating temp file");
+        free(buffer);
+        fclose(file);
+        return -1;
     }
 
+    char* found = buffer;
+    char* start = buffer;
+    while ((found = strstr(start, old_content)) != NULL) {
+        fwrite(start, sizeof(char), found - start, temp_file);
+        fwrite(new_content, sizeof(char), strlen(new_content), temp_file);
+        start = found + strlen(old_content);
+
+        if (!replace_all) {
+            break;
+        }
+    }
+    fwrite(start, sizeof(char), buffer + file_size - start, temp_file);
+
+    fseek(temp_file, 0, SEEK_SET);
+    fseek(file, 0, SEEK_SET);
+    char ch;
+    while (fread_s(&ch, sizeof(ch), 1, 1, temp_file) == 1) {
+        fwrite(&ch, 1, 1, file);
+    }
+
+    fclose(temp_file);
     free(buffer);
     fclose(file);
     return 0;
@@ -458,6 +455,91 @@ int comment_block(const char* filename, const char* beginLine, const char* endLi
     free(new_buffer);
     fclose(file);
     return 0;
+}
+
+#define BUFFER_SIZE 4096
+void remove_comment(const char* file_path, const char* start_marker, const char* end_marker) {
+    FILE* file;
+    errno_t err = fopen_s(&file, file_path, "rb+");
+    if (err != 0) {
+        perror("Error opening file");
+        return;
+    }
+
+    // Read the entire file into memory
+    fseek(file, 0, SEEK_END);
+    long fsize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char* string = (char*)malloc(fsize + 1);
+    if (string == NULL) {
+        perror("Memory allocation failed");
+        fclose(file);
+        return;
+    }
+
+    fread(string, 1, fsize, file);
+    string[fsize] = '\0';
+
+    char* output = (char*)malloc(fsize + 1);
+    if (output == NULL) {
+        perror("Memory allocation failed");
+        free(string);
+        fclose(file);
+        return;
+    }
+
+    char* out_ptr = output;
+    char* search_start = string;
+    int in_comment_block = 0;
+    size_t start_marker_len = strlen(start_marker);
+    size_t end_marker_len = strlen(end_marker);
+
+    while (*search_start != '\0') {
+        // Check for start marker
+        if (!in_comment_block && strncmp(search_start, start_marker, start_marker_len) == 0) {
+            in_comment_block = 1;
+            // Copy and remove '#' up to start marker to output
+            while (search_start < string + fsize && *search_start != '\n') {
+                if (*search_start == '#') {
+                    search_start++; // Skip the '#' character
+                }
+                *out_ptr++ = *search_start ? *search_start++ : '\0';
+            }
+            continue;
+        }
+
+        // Check for end marker
+        if (in_comment_block && strncmp(search_start, end_marker, end_marker_len) == 0) {
+            in_comment_block = 0;
+            // Copy and remove '#' up to end marker to output
+            while (search_start < string + fsize && *search_start != '\n') {
+                if (*search_start == '#') {
+                    search_start++; // Skip the '#' character
+                }
+                *out_ptr++ = *search_start ? *search_start++ : '\0';
+            }
+            continue;
+        }
+
+        // Remove '#' at the start of lines in comment block
+        if (in_comment_block && *search_start == '#') {
+            search_start++; // Skip the '#' character
+        }
+
+        *out_ptr++ = *search_start ? *search_start++ : '\0';
+    }
+    *out_ptr = '\0'; // Null-terminate the output string
+
+    // Write the modified content back to the file
+    fseek(file, 0, SEEK_SET);
+    fwrite(output, 1, strlen(output), file);
+    fflush(file); // Flush the file stream
+    _chsize_s(_fileno(file), strlen(output)); // Truncate the file to the new size
+    fclose(file);
+
+    free(string);
+    free(output);
 }
 
 bool find_string_in_file_s(const char* filepath, const char* search_string) {

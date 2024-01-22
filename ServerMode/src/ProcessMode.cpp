@@ -42,27 +42,17 @@ struct ProcessPipe {
     HANDLE hRead;
     HANDLE hWrite;
     HANDLE hProcess;
+    const wchar_t* processName;
     //HANDLE hThread;
 };
 
 DWORD ReadFromPipeThread(LPVOID lpParam) {
-    // ProcessPipe processPipe
-    //HANDLE hRead = (HANDLE)lpParam;
     ProcessPipe* processPipe = (ProcessPipe*)lpParam;
-    char buffer[4096];
 
     while (true) {
-
         DWORD availableBytes = 0;
         if (!PeekNamedPipe(processPipe->hRead, NULL, 0, NULL, &availableBytes, NULL)) {
             Log("PeekNamedPipe failed with error: %d\r\n", GetLastError());
-            break;
-        }
-
-        DWORD exitCode;
-        GetExitCodeProcess(processPipe->hProcess, &exitCode);
-        if (exitCode != STILL_ACTIVE) {
-            Log("Pipe exit\r\n");
             break;
         }
 
@@ -71,26 +61,29 @@ DWORD ReadFromPipeThread(LPVOID lpParam) {
             continue;
         }
 
-        DWORD bytesRead;
-        if (!ReadFile(processPipe->hRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL) || bytesRead == 0) {
-            Log("ReadFile failed or no more data to read.\r\n");
-            break;
-        }
+        DWORD bytesRead = 0;
+        char buffer[65535] = { '\0' };
+        if (ReadFile(processPipe->hRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL)) {
+            buffer[bytesRead] = '\0';
 
-        buffer[bytesRead] = '\0';
-        // Process the read data, e.g., append it to your EDIT control
+            wchar_t wBuffer[65535] = { '\0' };
+            MToW(buffer, wBuffer, sizeof(wBuffer) / sizeof(wchar_t));
 
-        wchar_t wBuffer[4096];
-        MToW(buffer, wBuffer, sizeof(wBuffer) / sizeof(wchar_t));
-        AppendEditInfo(L"INFO: Create process result: \r\n");
-        AppendEditInfo(wBuffer);
+            wchar_t wOutputBuffer[65525];
+            swprintf_s(wOutputBuffer, _countof(wOutputBuffer), L"INFO: Create process %ls result: %ls \r\n", processPipe->processName, wBuffer);
 
-        if (!EndsWithNewline(buffer)) {
-            AppendEditInfo(L"\r\n");
+            AppendEditInfo(wOutputBuffer);
+            //AppendEditInfo(wBuffer);
+
+            if (!EndsWithNewline(buffer)) {
+                AppendEditInfo(L"\r\n");
+            }
         }
     }
 
     CloseHandle(processPipe->hRead);  // Close the handle once you are done reading
+
+    delete processPipe;
     return 0;
 }
 
@@ -168,23 +161,24 @@ bool CalllCreateProcess(ProcessDetail* pProcessDetail, bool waitProcess = false)
         CloseHandle(hJob);
     }
 
-    ProcessPipe processPipe;
-    processPipe.hRead = hRead;
-    processPipe.hProcess = pProcessDetail->pi.hProcess;
+    ProcessPipe* processPipe = new ProcessPipe;
+    processPipe->hRead = hRead;
+    processPipe->hProcess = pProcessDetail->pi.hProcess;
+    processPipe->processName = pProcessDetail->processName;
 
-    HANDLE hThread = CreateThread(NULL, 0, ReadFromPipeThread, &processPipe, 0, NULL);
-    if (hThread) {
-        WaitForSingleObject(hThread, INFINITE);
-    }
+    HANDLE hThread = CreateThread(NULL, 0, ReadFromPipeThread, processPipe, 0, NULL);
+    //if (hThread) {
+    //    WaitForSingleObject(hThread, INFINITE);
+    //}
 
-    if (hThread == NULL) {
-        free(wCmdStr);
-        Log("Failed to create thread.\r\n");
-        CloseHandle(hRead);
-    }
-    else {
-        CloseHandle(hThread);  // Close the thread handle if you don't need to reference it anymore
-    }
+    //if (hThread == NULL) {
+    //    free(wCmdStr);
+    //    Log("Failed to create thread.\r\n");
+    //    CloseHandle(hRead);
+    //}
+    //else {
+    //    CloseHandle(hThread);  // Close the thread handle if you don't need to reference it anymore
+    //}
 
     free(wCmdStr);
 
@@ -226,9 +220,13 @@ DWORD phpProcess(ServiceUseConfig* serviceUse) {
         return 1;
     }
 
+    wchar_t phpRunCmd[1024] = { '\0' };
+    swprintf_s(phpRunCmd, _countof(phpRunCmd),
+        L"%ls -b 127.0.0.1:9000", pathsPHP->paths[0]);
+
     // Start php
     pPhpProcessDetail->processName = L"php-cgi.exe";
-    pPhpProcessDetail->cmd = pathsPHP->paths[0];
+    pPhpProcessDetail->cmd = phpRunCmd;
     pPhpProcessDetail->dir = phpDirectoryPath;
     if (CalllCreateProcess(pPhpProcessDetail) == true) {
         AppendEditInfo(L"INFO: PHP runing.\r\n");
@@ -527,22 +525,22 @@ DWORD WINAPI DaemonMonitorService(LPVOID lParam) {
 
         // While it's running, monitor to see if the process has been closed due to interference from other processes.
         if (bPHPRunning && !ProcessIsRunning(L"php-cgi.exe")) {
-            AppendEditInfo(L"WARNING: php-cgi.exe Unexpected exit.\r\n");
+            AppendEditInfo(L"ERROR: php-cgi.exe Unexpected exit.\r\n");
             bPHPRunning = false;
         }
 
         if (bMysqlRunning && !ProcessIsRunning(L"mysqld.exe")) {
-            AppendEditInfo(L"WARNING: mysqld.exe Unexpected exit.\r\n");
+            AppendEditInfo(L"ERROR: mysqld.exe Unexpected exit.\r\n");
             bMysqlRunning = false;
         }
 
         if (bApacheRunning && !ProcessIsRunning(L"httpd.exe")) {
-            AppendEditInfo(L"WARNING: httpd.exe Unexpected exit.\r\n");
+            AppendEditInfo(L"ERROR: httpd.exe Unexpected exit.\r\n");
             bApacheRunning = false;
         }
 
         if (bNginxRunning && !ProcessIsRunning(L"nginx.exe")) {
-            AppendEditInfo(L"WARNING: nginx.exe Unexpected exit.\r\n");
+            AppendEditInfo(L"ERROR: nginx.exe Unexpected exit.\r\n");
             bNginxRunning = false;
         }
 

@@ -2,7 +2,7 @@
 
 int modify_conf(const wchar_t* filename, const wchar_t* old_content, const wchar_t* new_content);
 
-int modify_conf_utf8AndAscii(const char* filename, const char* old_content, const char* new_content);
+int modify_conf_utf8AndAscii(const char* filename, const char* old_content, const char* new_content, int replace_all = false);
 
 int modify_conf_InsertOrUpdate_utf8AndAscii(const char* filename, const char* old_content, const char* new_content);
 
@@ -13,6 +13,8 @@ int modify_conf_line_utf8AndAscii(const char* file_path, const char* search_str,
 int modify_conf_line_InsertOrUpdate_utf8AndAscii(const char* file_path, const char* search_str, const char* replace_str);
 
 int comment_block(const char* filename, const char* beginLine, const char* endLine);
+
+void remove_comment(const char* file_path, const char* start_pattern, const char* end_pattern);
 
 bool find_string_in_file_s(const char* filepath, const char* search_string);
 

@@ -346,6 +346,10 @@ bool UnzipFile(SoftwareInfo* pSoftwareInfo) {
         syncPHPConfigFile(*pSoftwareInfo);
     }
 
+    if (wcscmp(pSoftwareInfo->serviceType, L"nginx") == 0) {
+        InitializeNginxConfigFile(*pSoftwareInfo);
+    }
+
     return true;
 }
 

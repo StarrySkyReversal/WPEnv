@@ -24,6 +24,8 @@ bool GetServiceUseItem(ServiceUseConfig* config);
 
 void InitializeApacheConfigFile(SoftwareInfo softwareInfo);
 
+void InitializeNginxConfigFile(SoftwareInfo softwareInfo);
+
 void SyncConfigFile(SoftwareGroupInfo softwareGroupInfo);
 
 void syncConfigFilePHPAndApache(const wchar_t* phpVersion, const wchar_t* apacheVersion);

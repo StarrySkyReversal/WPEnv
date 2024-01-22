@@ -338,6 +338,53 @@ void getMysqlAbsBaseDir(const wchar_t* version, wchar_t* buffer, int bufferSize)
     freePathList(pathsList);
 }
 
+void getPhpDevIniOriginalFilePath(SoftwareInfo softwareInfo, wchar_t* buffer, int bufferSize) {
+    swprintf_s(buffer, bufferSize, L"%ls/%ls/%ls/php.ini-development",
+        DIRECTORY_SERVICE, softwareInfo.serviceType, softwareInfo.version);
+}
+
+void getApacheHttpdConfFilePath(const wchar_t* version, wchar_t* buffer, int bufferSize) {
+    wchar_t apacheAbsBaseDir[256] = { L'\0' };
+    getApacheVersionAbsBaseDir(version, apacheAbsBaseDir, _countof(apacheAbsBaseDir));
+
+    if (apacheAbsBaseDir[0] != L'\0') {
+        swprintf_s(buffer, bufferSize, L"%ls/conf/httpd.conf", apacheAbsBaseDir);
+    }
+}
+
+void getNginxConfFilePath(const wchar_t* version, wchar_t* buffer, int bufferSize) {
+    wchar_t nginxAbsBaseDir[256] = { L'\0' };
+    getNginxAbsBaseDir(version, nginxAbsBaseDir, _countof(nginxAbsBaseDir));
+
+    if (nginxAbsBaseDir[0] != L'\0') {
+        swprintf_s(buffer, bufferSize, L"%ls/conf/nginx.conf", nginxAbsBaseDir);
+    }
+}
+
+
+void InitializeNginxConfigFile(SoftwareInfo softwareInfo) {
+    wchar_t* wProgramDirectory = get_current_program_directory_with_forward_slash();
+
+    char programDirectory[256];
+    WToM(wProgramDirectory, programDirectory, sizeof(programDirectory));
+
+    char wwwDir[256];
+    sprintf_s(wwwDir, sizeof(wwwDir), "root %s/www/default;", programDirectory);
+
+    wchar_t wNginxConFilePath[256];
+    getNginxConfFilePath(softwareInfo.version, wNginxConFilePath, _countof(wNginxConFilePath));
+
+    char nginxConFilePath[256];
+    WToM(wNginxConFilePath, nginxConFilePath, sizeof(nginxConFilePath));
+    if (modify_conf_utf8AndAscii(nginxConFilePath, "root   html;", wwwDir, true) == 0) {
+    }
+
+    if (modify_conf_utf8AndAscii(nginxConFilePath, "index  index.html index.htm;", "index  index.php index.html index.htm;", true) == 0) {
+    }
+
+    remove_comment(nginxConFilePath, "#location ~ \\.php$ {", "#}");
+}
+
 void InitializeApacheConfigFile(SoftwareInfo softwareInfo) {
     wchar_t targetServiceDirectory[512] = { '\0' };
     swprintf_s(targetServiceDirectory, _countof(targetServiceDirectory), L"%ls/%ls/%ls",
@@ -468,20 +515,6 @@ void findMatchingFiles(const wchar_t* directory, wchar_t* buffer, int bufferSize
     }
 }
 
-void getPhpDevIniOriginalFilePath(SoftwareInfo softwareInfo, wchar_t* buffer, int bufferSize) {
-    swprintf_s(buffer, bufferSize, L"%ls/%ls/%ls/php.ini-development",
-        DIRECTORY_SERVICE, softwareInfo.serviceType, softwareInfo.version);
-}
-
-void getApacheHttpdConfFilePath(const wchar_t* version, wchar_t* buffer, int bufferSize) {
-    wchar_t apacheAbsBaseDir[256] = { L'\0' };
-    getApacheVersionAbsBaseDir(version, apacheAbsBaseDir, _countof(apacheAbsBaseDir));
-
-    if (apacheAbsBaseDir[0] != L'\0') {
-        swprintf_s(buffer, bufferSize, L"%ls/conf/httpd.conf", apacheAbsBaseDir);
-    }
-}
-
 void syncPHPConfigFile(SoftwareInfo softwareInfo) {
     wchar_t wPhpIniFilePath[256];
     swprintf_s(wPhpIniFilePath, _countof(wPhpIniFilePath), L"%ls/%ls/%ls/php.ini-development",
@@ -499,6 +532,10 @@ void syncPHPConfigFile(SoftwareInfo softwareInfo) {
 
     // copy php.ini-development to php.ini
     if (copyFile(phpIniFilePathSource, phpIniFilePathDest) == 0) {
+        char phpExtensionDir[] = "extension_dir = ext";
+        if (modify_conf_line_utf8AndAscii(phpIniFilePathDest, ";extension_dir = \"ext\"", phpExtensionDir) == 0) {
+        }
+
         char phpIniExtCurl[] = "extension=curl";
         if (modify_conf_utf8AndAscii(phpIniFilePathDest, ";extension=curl", phpIniExtCurl) == 0) {
         }

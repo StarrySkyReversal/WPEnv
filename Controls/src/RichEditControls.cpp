@@ -131,7 +131,7 @@ void AppendEditInfo(const wchar_t* string) {
     wchar_t datetime[128];
     getCurrentDateTime(datetime, sizeof(datetime) / sizeof(wchar_t));
 
-    wchar_t combinedStr[2048];
+    wchar_t combinedStr[65536] = { '\0' };
     swprintf_s(combinedStr, _countof(combinedStr), L"%s %s", datetime, string);
 
     // Define a gray CHARFORMAT.
