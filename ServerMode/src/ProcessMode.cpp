@@ -214,7 +214,7 @@ DWORD phpProcess(ServiceUseConfig* serviceUse) {
 
     findFilesInDirectory(phpDirectoryPath, "php-cgi.exe", pathsPHP);
     if (pathsPHP->count != 1) {
-        LogAndMsgBox("%s program as not found\r\n", serviceUse->php);
+        LogAndMsgBox("This program %s does not exist, please download and unzip it first, and add the configuration again.\r\n", serviceUse->php);
         return 1;
     }
 
@@ -256,7 +256,7 @@ DWORD mysqlClientProcess(ServiceUseConfig* serviceUse, bool bMysqlInit) {
 
         findFilesInDirectory(mysqlClientDirectoryPath, "mysql.exe", pathsMysqlClient);
         if (pathsMysqlClient->count != 1) {
-            LogAndMsgBox("%s program mysqlclient as not found.\r\n", serviceUse->mysql);
+            LogAndMsgBox("This program %s mysqlclient does not exist, please download and unzip it first, and add the configuration again.\r\n", serviceUse->mysql);
             return 1;
         }
 
@@ -290,7 +290,7 @@ DWORD mysqlServiceProcess(ServiceUseConfig* serviceUse, bool* bMysqlInit) {
 
     findFilesInDirectory(mysqldDirectoryPath, "mysqld.exe", pathsMysql);
     if (pathsMysql->count != 1) {
-        LogAndMsgBox("%s program mysqld as not found.\r\n", serviceUse->mysql);
+        LogAndMsgBox("This program %s mysqld does not exist, please download and unzip it first, and add the configuration again.\r\n", serviceUse->mysql);
 
         freePathList(pathsMysql);
         return 1;
@@ -379,7 +379,7 @@ DWORD webServiceProcess(ServiceUseConfig* serviceUse) {
     findFilesInDirectory(webServiceDirectoryPath, webServiceBinExe, pathsWebservice);
 
     if (pathsWebservice->count != 1) {
-        LogAndMsgBox("%s program as not found. \r\n", serviceUse->webService);
+        LogAndMsgBox("This program %s does not exist, please download and unzip it first, and add the configuration again.\r\n", serviceUse->webService);
         return 1;
     }
 

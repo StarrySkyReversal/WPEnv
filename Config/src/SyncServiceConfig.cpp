@@ -44,13 +44,13 @@ void versionMatch(const char* serviceType, const char* fileTagVersion, const cha
 
 	err = fopen_s(&sourceFile, sourceFilename, "rb");
 	if (err != 0) {
-		MessageBoxA(NULL, "sourceFilename Error", NULL, 0);
+		MessageBoxA(NULL, "The Repository directory does not exist, please rebuild the project.", NULL, 0);
 		return;
 	}
 
 	err = fopen_s(&newFile, targetFilepath, "wb");
 	if (err != 0) {
-		MessageBoxA(NULL, "targetFilepath Error", NULL, 0);
+		MessageBoxA(NULL, "Target file does not exist, please download it first", NULL, 0);
 		return;
 	}
 
