@@ -39,78 +39,75 @@ void create_directory_recursive(const char* path) {
     }
 }
 
-void MoveFolderContents(const wchar_t* sourceFolder, const wchar_t* destFolder) {
-    WIN32_FIND_DATA findFileData;
+void MoveFolderContents(const char* sourceFolder, const char* destFolder) {
+    WIN32_FIND_DATAA findFileData;
     HANDLE hFind = INVALID_HANDLE_VALUE;
 
-    wchar_t srcSearchPath[MAX_PATH];
-    swprintf_s(srcSearchPath, L"%ls/*", sourceFolder);
+    char srcSearchPath[MAX_PATH];
+    sprintf_s(srcSearchPath, "%s/*", sourceFolder);
 
-    hFind = FindFirstFile(srcSearchPath, &findFileData);
+    hFind = FindFirstFileA(srcSearchPath, &findFileData);
 
     if (hFind == INVALID_HANDLE_VALUE) {
         return; // No files found
     }
 
     do {
-        const wchar_t* fileName = findFileData.cFileName;
+        const char* fileName = findFileData.cFileName;
 
-        if (wcscmp(fileName, L".") != 0 && wcscmp(fileName, L"..") != 0) {
-            wchar_t srcPath[MAX_PATH];
-            wchar_t destPath[MAX_PATH];
+        if (strcmp(fileName, ".") != 0 && strcmp(fileName, "..") != 0) {
+            char srcPath[MAX_PATH];
+            char destPath[MAX_PATH];
 
-            swprintf_s(srcPath, L"%ls/%ls", sourceFolder, fileName);
-            swprintf_s(destPath, L"%ls/%ls", destFolder, fileName);
+            sprintf_s(srcPath, "%s/%s", sourceFolder, fileName);
+            sprintf_s(destPath, "%s/%s", destFolder, fileName);
 
-            MoveFile(srcPath, destPath);
+            MoveFileA(srcPath, destPath);
         }
-    } while (FindNextFile(hFind, &findFileData) != 0);
+    } while (FindNextFileA(hFind, &findFileData) != 0);
 
     FindClose(hFind);
 }
 
-int extract_zip_file(const wchar_t* zip_filename, const wchar_t* serviceType, const wchar_t* version) {
+int extract_zip_file(const char* zipFilename, const char* serviceType, const char* version) {
     if (!DirectoryExists(DIRECTORY_SERVICE)) {
-        CreateDirectory(DIRECTORY_SERVICE, NULL);
+        CreateDirectoryA(DIRECTORY_SERVICE, NULL);
     }
 
-    wchar_t serveiceTypeDirectory[512];
-    swprintf_s(serveiceTypeDirectory, sizeof(serveiceTypeDirectory) / sizeof(wchar_t), L"%ls/%ls", DIRECTORY_SERVICE, serviceType);
+    char serveiceTypeDirectory[512];
+    sprintf_s(serveiceTypeDirectory, sizeof(serveiceTypeDirectory), "%s/%s", DIRECTORY_SERVICE, serviceType);
 
     if (!DirectoryExists(serveiceTypeDirectory)) {
-        CreateDirectory(serveiceTypeDirectory, NULL);
+        CreateDirectoryA(serveiceTypeDirectory, NULL);
     }
     /////////////////
-    wchar_t tempVersionDirectory[512];
-    swprintf_s(tempVersionDirectory, L"%ls/temp_%ls", serveiceTypeDirectory, version);
+    char tempVersionDirectory[512];
+    sprintf_s(tempVersionDirectory, "%s/temp_%s", serveiceTypeDirectory, version);
     if (DirectoryExists(tempVersionDirectory)) {
-        LogAndMsgBox(L"Temporary directory exists, please manual delete this directory %ls\r\n", tempVersionDirectory);
+        LogAndMsgBox("Temporary directory exists, please manual delete this directory %s\r\n", tempVersionDirectory);
         return -3;
     }
 
     // Create temporary directory
-    if (!CreateDirectory(tempVersionDirectory, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
-        LogAndMsgBox(L"Failed to create temporary directory %ls\r\n", tempVersionDirectory);
+    if (!CreateDirectoryA(tempVersionDirectory, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+        LogAndMsgBox("Failed to create temporary directory %l\r\n", tempVersionDirectory);
         return -3;
     }
     /////////////////
 
-    char multipleByteZipFile[1024];
-    WToM(zip_filename, multipleByteZipFile, sizeof(multipleByteZipFile));
-
-    unzFile zfile = unzOpen(multipleByteZipFile);
+    unzFile zfile = unzOpen(zipFilename);
     if (!zfile) {
-        LogAndMsgBox(L"Cannot open ZIP file %ls\r\n", zip_filename);
+        LogAndMsgBox("Cannot open ZIP file %s\r\n", zipFilename);
         return -1;
     }
 
     // version directory
-    wchar_t versionDirectory[1024];
-    swprintf_s(versionDirectory, sizeof(versionDirectory) / sizeof(wchar_t), L"%ls/%ls/%ls", DIRECTORY_SERVICE, serviceType, version);
+    char versionDirectory[1024];
+    sprintf_s(versionDirectory, sizeof(versionDirectory), "%s/%s/%s", DIRECTORY_SERVICE, serviceType, version);
     if (DirectoryExists(versionDirectory)) {
         unzClose(zfile);
 
-        LogAndMsgBox(L"The corresponding version folder already exists: %ls/%ls/%ls\r\n", DIRECTORY_SERVICE, serviceType, version);
+        LogAndMsgBox("The corresponding version folder already exists: %s/%s/%s\r\n", DIRECTORY_SERVICE, serviceType, version);
         return -3;
     }
 
@@ -122,7 +119,7 @@ int extract_zip_file(const wchar_t* zip_filename, const wchar_t* serviceType, co
     if (unzGoToFirstFile(zfile) != UNZ_OK) {
         unzClose(zfile);
 
-        LogAndMsgBox(L"Failed to find the first file in the ZIP %ls\r\n", zip_filename);
+        LogAndMsgBox("Failed to find the first file in the ZIP %s\r\n", zipFilename);
         return -1;
     }
 
@@ -141,9 +138,7 @@ int extract_zip_file(const wchar_t* zip_filename, const wchar_t* serviceType, co
         unzGetCurrentFileInfo(zfile, &file_info, filename_inzip, sizeof(filename_inzip), NULL, 0, NULL, 0);
 
         char fullPath[2048];
-        char mTempVersionDirectoryPath[512];
-        WToM(tempVersionDirectory, mTempVersionDirectoryPath, sizeof(mTempVersionDirectoryPath));
-        sprintf_s(fullPath, "%s/%s", mTempVersionDirectoryPath, filename_inzip);
+        sprintf_s(fullPath, "%s/%s", tempVersionDirectory, filename_inzip);
 
         // If it's a directory, create it.
         if (filename_inzip[strlen(filename_inzip) - 1] == '/') {
@@ -198,25 +193,20 @@ int extract_zip_file(const wchar_t* zip_filename, const wchar_t* serviceType, co
 
     unzClose(zfile);
 
-    //wchar_t finalDirectory[512];
-    //swprintf_s(finalDirectory, L"%ls/%ls/", serveiceTypeDirectory, version);
     if (topLevelItemCount == 1) {
-        wchar_t wFirstTopLevelItem[512];
-        MToW(firstTopLevelItem, wFirstTopLevelItem, _countof(wFirstTopLevelItem));
-
         // Rename topLevel directory
-        wchar_t oldPath[1024];
-        swprintf_s(oldPath, L"%ls/%ls", tempVersionDirectory, wFirstTopLevelItem);
-        _wrename(oldPath, versionDirectory);
+        char oldPath[1024];
+        sprintf_s(oldPath, "%s/%s", tempVersionDirectory, firstTopLevelItem);
+        rename(oldPath, versionDirectory);
     }
     else {
         // Move all projects to new folder
-        CreateDirectory(versionDirectory, NULL);
+        CreateDirectoryA(versionDirectory, NULL);
         MoveFolderContents(tempVersionDirectory, versionDirectory);
     }
 
     // Delete temporary directory
-    RemoveDirectory(tempVersionDirectory);
+    RemoveDirectoryA(tempVersionDirectory);
 
     return 0;
 }

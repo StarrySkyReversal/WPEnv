@@ -14,11 +14,11 @@
 #include <memory.h>
 #include <tchar.h>
 
-#define DIRECTORY_SERVICE L"service"
-#define DIRECTORY_CONFIG L"config"
-#define DIRECTORY_DOWNLOAD L"downloads"
-#define DIRECTORY_WEB L"www"
-#define DIRECTORY_WEB_DEFAULT L"www/default"
+#define DIRECTORY_SERVICE "service"
+#define DIRECTORY_CONFIG "config"
+#define DIRECTORY_DOWNLOAD "downloads"
+#define DIRECTORY_WEB "www"
+#define DIRECTORY_WEB_DEFAULT "www/default"
 
-#define FILE_CONFIG_SERVICE_SOURCE L"config/service_source.txt"
-#define FILE_CONFIG_SERVICE_USE L"config/service_use.txt"
+#define FILE_CONFIG_SERVICE_SOURCE "config/service_source.txt"
+#define FILE_CONFIG_SERVICE_USE "config/service_use.txt"

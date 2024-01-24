@@ -76,12 +76,12 @@ void CreateRichEditControls(HWND hWnd, HINSTANCE hInstance) {
 void CheckRichEditLinesForErrors(HWND hRichEdit) {
     LRESULT lineCount = SendMessage(hRichEdit, EM_GETLINECOUNT, 0, 0);
     for (int i = 0; i < lineCount; i++) {
-        wchar_t lineText[1024];
+        char lineText[1024];
         *(WORD*)lineText = sizeof(lineText);
         LRESULT len = SendMessage(hRichEdit, EM_GETLINE, i, (LPARAM)lineText);
         lineText[len] = L'\0';
 
-        if (wcsncmp(lineText, L"ERROR", 5) == 0) {
+        if (strncmp(lineText, "ERROR", 5) == 0) {
             CHARFORMAT cf;
             memset(&cf, 0, sizeof(cf));
             cf.cbSize = sizeof(cf);
@@ -99,7 +99,7 @@ void CheckRichEditLinesForErrors(HWND hRichEdit) {
     SendMessage(hRichEdit, EM_SETSEL, -1, -1);
 }
 
-void getCurrentDateTime(wchar_t* buffer, size_t bufferSize) {
+void getCurrentDateTime(char* buffer, size_t bufferSize) {
     time_t t;
     struct tm tm_info;
 
@@ -107,19 +107,19 @@ void getCurrentDateTime(wchar_t* buffer, size_t bufferSize) {
     localtime_s(&tm_info, &t);
 
     //wcsftime(buffer, bufferSize, L"%Y-%m-%d %H:%M:%S  ", &tm_info);
-    wcsftime(buffer, bufferSize, L"%H:%M:%S ", &tm_info);
+    strftime(buffer, bufferSize, "%H:%M:%S ", &tm_info);
 }
 
 void ClearRichEdit() {
     SetWindowText(hRichEdit, L"");
 }
 
-void AppendEditInfo(const wchar_t* string) {
+void AppendEditInfo(const char* string) {
     // Get the text length of the edit box so we can determine where to insert new content.
     int nLength = GetWindowTextLength(hRichEdit);
 
     // Move the insertion point to the end of the text.
-    SendMessage(hRichEdit, EM_SETSEL, (WPARAM)nLength, (LPARAM)nLength);
+    SendMessageA(hRichEdit, EM_SETSEL, (WPARAM)nLength, (LPARAM)nLength);
 
     CHARFORMAT cfSize;
     ZeroMemory(&cfSize, sizeof(cfSize));
@@ -128,11 +128,8 @@ void AppendEditInfo(const wchar_t* string) {
     cfSize.dwMask = CFM_SIZE; // We want to modify font size
     cfSize.yHeight = 10 * 20; // font size is in twips (1/1440 inch or 1/20 of a point)
 
-    wchar_t datetime[128];
-    getCurrentDateTime(datetime, sizeof(datetime) / sizeof(wchar_t));
-
-    wchar_t combinedStr[65536] = { '\0' };
-    swprintf_s(combinedStr, _countof(combinedStr), L"%s %s", datetime, string);
+    char datetime[128];
+    getCurrentDateTime(datetime, sizeof(datetime));
 
     // Define a gray CHARFORMAT.
     CHARFORMAT cf;
@@ -142,21 +139,21 @@ void AppendEditInfo(const wchar_t* string) {
     cf.crTextColor = RGB(136, 136, 136);
 
     // Set the format first.
-    SendMessage(hRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+    SendMessageA(hRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
     // Then insert date and time text.
-    SendMessage(hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)datetime);
+    SendMessageA(hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)datetime);
 
     // Reset the format to default.
     cf.crTextColor = RGB(51, 51, 51);
-    SendMessage(hRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+    SendMessageA(hRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
     // Insert new content.
-    SendMessage(hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)string);
+    SendMessageA(hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)string);
 
-    LRESULT iLines = SendMessage(hRichEdit, EM_GETLINECOUNT, 0, 0);
-    SendMessage(hRichEdit, EM_SCROLL, SB_LINEDOWN, iLines + 1);
+    LRESULT iLines = SendMessage(hRichEdit, EM_GETLINECOUNT, 0, (LPARAM)0);
+    SendMessageA(hRichEdit, EM_SCROLL, SB_LINEDOWN, iLines + 1);
 
-    SendMessage(hRichEdit, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cfSize);
+    SendMessageA(hRichEdit, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cfSize);
 
     CheckRichEditLinesForErrors(hRichEdit);
 }

@@ -19,8 +19,8 @@ LRESULT CALLBACK SubclassedListBoxProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
             if (pDIS->itemID == -1) break;
 
-            wchar_t buffer[256];
-            LRESULT numDataLength = SendMessage(pDIS->hwndItem, LB_GETTEXT, pDIS->itemID, (LPARAM)buffer);
+            char buffer[256];
+            LRESULT numDataLength = SendMessageA(pDIS->hwndItem, LB_GETTEXT, pDIS->itemID, (LPARAM)buffer);
             if (numDataLength <= 0) {
                 break;
             }
@@ -58,7 +58,7 @@ LRESULT CALLBACK SubclassedListBoxProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
             //if (wcslen(buffer) > 0) {
             if (buffer[0] != L'\0') {
-                DrawText(hdc, buffer, -1, &rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+                DrawTextA(hdc, buffer, -1, &rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
             }
 
             return 0;

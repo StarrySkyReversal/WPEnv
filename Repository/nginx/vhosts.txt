@@ -1,0 +1,22 @@
+server {
+    listen       80;
+    server_name  {{TPL_VAR:ServerName}};
+	
+    root  {{TPL_VAR:DocumentRoot}};
+    index index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ /index.php;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+        include        fastcgi.conf;
+        include        fastcgi_params;
+    }
+
+    access_log {{TPL_VAR:wwwLogs}}/nginx_access.log;
+    error_log  {{TPL_VAR:wwwLogs}}/nginx_error.log;
+}

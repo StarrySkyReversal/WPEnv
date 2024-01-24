@@ -97,10 +97,10 @@ void CreateStaticLabelControls(HWND hWnd, HINSTANCE hInstance) {
     SetWindowSubclass(hStaticLabel, StaticSubclassProc, IDC_PROGRESS_INFO, 0);
 }
 
-void UpdateStaticLabelInfo(const wchar_t* String) {
+void UpdateStaticLabelInfo(const char* String) {
     SendMessage(hStaticLabel, WM_SETREDRAW, FALSE, 0);
 
-    SendMessage(hStaticLabel, WM_SETTEXT, 0, (LPARAM)String);
+    SendMessageA(hStaticLabel, WM_SETTEXT, 0, (LPARAM)String);
 
     SendMessage(hStaticLabel, WM_SETREDRAW, TRUE, 0);
     InvalidateRect(hStaticLabel, NULL, TRUE);

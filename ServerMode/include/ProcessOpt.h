@@ -1,12 +1,9 @@
 #pragma once
 
-bool IsHttpdMainProcessRunning(const wchar_t* processName);
+bool IsHttpdMainProcessRunning();
 
-BOOL ProcessIsRunning(LPCWSTR processName);
+BOOL ProcessIsRunning(const char* processName);
 
-bool IsHttpdParentRunning(const wchar_t* processName);
+bool IsHttpdParentRunning(const char* processName);
 
-DWORD isSelfChildProcessOfCurrent(const wchar_t* processName);
-
-DWORD* GetAllChildProcesses(DWORD parentPid, int* count);
-
+DWORD isSelfChildProcessOfCurrent(const char* processName);

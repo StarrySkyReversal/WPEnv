@@ -4,5 +4,5 @@
 
 void CreateStaticLabelControls(HWND hWnd, HINSTANCE hInstance);
 
-void UpdateStaticLabelInfo(const wchar_t* String);
+void UpdateStaticLabelInfo(const char* String);
 

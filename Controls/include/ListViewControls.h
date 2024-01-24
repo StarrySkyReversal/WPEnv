@@ -8,7 +8,7 @@ void AdjustListViewColumns(HWND hWndListView);
 int GetListViewCount(HWND hWnd);
 int GetListViewItemInsertIndex(HWND hWnd);
 
-void AddListViewItem(HWND hWnd, int itemIndex, int ColumnIndex, wchar_t* text);
+void AddListViewItem(HWND hWnd, int itemIndex, int ColumnIndex, const char* text);
 int GetListViewSelectedIndex(HWND hWnd);
 bool DeleteListViewItem(HWND hWnd, int selectedIndex);
-void GetListViewSelectedText(HWND hWnd, int itemIndex, int columnIndex, wchar_t* buffer, DWORD bufferSize);
+void GetListViewSelectedText(HWND hWnd, int itemIndex, int columnIndex, char* buffer, DWORD bufferSize);

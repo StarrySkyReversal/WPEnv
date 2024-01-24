@@ -1,3 +1,3 @@
 #pragma once
 
-int extract_zip_file(const wchar_t* zip_filename, const wchar_t* serviceType, const wchar_t* version);
+int extract_zip_file(const char* zip_filename, const char* serviceType, const char* version);

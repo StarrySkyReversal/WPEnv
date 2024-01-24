@@ -2,10 +2,10 @@
 #include "BaseFileOpt.h"
 #include <stdio.h>
 
-FileList* ListFiles(const wchar_t* directory) {
-    WIN32_FIND_DATA findFileData;
+FileList* ListFiles(const char* directory) {
+    WIN32_FIND_DATAA findFileData;
     HANDLE hFind = INVALID_HANDLE_VALUE;
-    wchar_t path[512];
+    char path[512];
 
     FileList* list = (FileList*)malloc(sizeof(FileList));
     if (!list) {
@@ -13,8 +13,8 @@ FileList* ListFiles(const wchar_t* directory) {
     }
     memset(list, 0, sizeof(FileList));
 
-    _snwprintf_s(path, sizeof(path) / sizeof(wchar_t), _TRUNCATE, L"%ls/*", directory);
-    hFind = FindFirstFile(path, &findFileData);
+    _snprintf_s(path, sizeof(path), _TRUNCATE, "%s/*", directory);
+    hFind = FindFirstFileA(path, &findFileData);
 
     if (hFind == INVALID_HANDLE_VALUE) {
         free(list);
@@ -24,33 +24,28 @@ FileList* ListFiles(const wchar_t* directory) {
     list->count = 0;
 
     do {
-        wchar_t* fileFullNameData = findFileData.cFileName;
+        char* fileFullNameData = findFileData.cFileName;
 
         if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             // Skip directories
             continue;
         }
 
-        // Remove the file extension.
-        //wchar_t* dot = wcsrchr(file, '.');
-        //if (dot) {
-        //    *dot = '\0';
-        //}
-        size_t len = wcslen(fileFullNameData);
-        wchar_t* copyFile = (wchar_t*)malloc((len + 1) * sizeof(wchar_t));
+        size_t len = strlen(fileFullNameData);
+        char* copyFile = (char*)malloc((len + 1) * sizeof(char));
         if (!copyFile) {
             free(list);
             FindClose(hFind);
             return NULL;
         }
 
-        wcscpy_s(copyFile, len + 1, fileFullNameData);
-        wchar_t* dot = wcsrchr(copyFile, L'.');
+        strcpy_s(copyFile, len + 1, fileFullNameData);
+        char* dot = strrchr(copyFile, '.');
         if (dot) {
             *dot = L'\0';
         }
 
-        wchar_t* fileFullName = _wcsdup(fileFullNameData);
+        char* fileFullName = _strdup(fileFullNameData);
         if (!fileFullName) {
             free(list);
             FindClose(hFind);
@@ -63,19 +58,19 @@ FileList* ListFiles(const wchar_t* directory) {
             list->count += 1;
         }
 
-    } while (FindNextFile(hFind, &findFileData) != 0);
+    } while (FindNextFileA(hFind, &findFileData) != 0);
 
     FindClose(hFind);
 
     return list;
 }
 
-bool CheckDownloadFileExists(const wchar_t* fileFullName, FileList** outList) {
+bool CheckDownloadFileExists(const char* fileFullName, FileList** outList) {
     *outList = ListFiles(DIRECTORY_DOWNLOAD);
 
     if (*outList) {
         for (int i = 0; i < (*outList)->count; i++) {
-            if (wcscmp((*outList)->filename[i], fileFullName) == 0) {
+            if (strcmp((*outList)->filename[i], fileFullName) == 0) {
                 return true;
             }
         }
@@ -95,8 +90,8 @@ void FreeCheckDownloadFileExists(FileList* fileList) {
     free(fileList);
 }
 
-BOOL DirectoryExists(const wchar_t* dirName) {
-    DWORD fileAttributes = GetFileAttributes(dirName);
+BOOL DirectoryExists(const char* dirName) {
+    DWORD fileAttributes = GetFileAttributesA(dirName);
 
     // Check if the directory exists and it is a directory
     if (fileAttributes != INVALID_FILE_ATTRIBUTES && (fileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -106,24 +101,24 @@ BOOL DirectoryExists(const wchar_t* dirName) {
     return FALSE;
 }
 
-const wchar_t* GetFileFullNameFromUrl(const wchar_t* filename, const wchar_t* url) {
-    const wchar_t* dot = wcsrchr(url, L'.');
-    if (!dot || dot == url) return _wcsdup(L"");
+const char* GetFileFullNameFromUrl(const char* filename, const char* url) {
+    const char* dot = strrchr(url, '.');
+    if (!dot || dot == url) return _strdup("");
 
-    wchar_t bufferFileName[2048];
-    swprintf_s(bufferFileName, sizeof(bufferFileName) / sizeof(wchar_t), L"%s.%s", filename, (dot + 1));
+    char bufferFileName[2048];
+    sprintf_s(bufferFileName, sizeof(bufferFileName), "%s.%s", filename, (dot + 1));
 
-    wchar_t* fullFileName = (wchar_t*)malloc((wcslen(bufferFileName) + 1) * sizeof(wchar_t));
+    char* fullFileName = (char*)malloc((strlen(bufferFileName) + 1) * sizeof(char));
     if (fullFileName) {
-        wcscpy_s(fullFileName, wcslen(bufferFileName) + 1, bufferFileName);
+        strcpy_s(fullFileName, strlen(bufferFileName) + 1, bufferFileName);
     }
 
     return fullFileName;
 }
 
-void MergeFiles(const wchar_t* destination, const wchar_t* parts[], int num_parts) {
+void MergeFiles(const char* destination, const char* parts[], int num_parts) {
     FILE* dest_file;
-    _wfopen_s(&dest_file, destination, L"wb");
+    fopen_s(&dest_file, destination, "wb");
     if (!dest_file) {
         perror("Error opening destination file");
         return;
@@ -132,7 +127,7 @@ void MergeFiles(const wchar_t* destination, const wchar_t* parts[], int num_part
     for (int i = 0; i < num_parts; i++) {
         if (CheckFileExists(parts[i])) {
             FILE* part_file;
-            _wfopen_s(&part_file, parts[i], L"rb");
+            fopen_s(&part_file, parts[i], "rb");
 
             if (!part_file) {
                 perror("Error opening part file");
@@ -148,51 +143,35 @@ void MergeFiles(const wchar_t* destination, const wchar_t* parts[], int num_part
 
             fclose(part_file);
             // delete merged files
-            DeleteFile(parts[i]);
+            DeleteFileA(parts[i]);
         }
     }
 
     fclose(dest_file);
 }
 
-void GetDirectoryFromPath(const wchar_t* fullPath, wchar_t* directory, size_t directorySize, bool getParent) {
-    wcsncpy_s(directory, directorySize, fullPath, _TRUNCATE);
+void GetDirectoryFromPath(const char* fullPath, char* directory, size_t directorySize, bool getParent) {
+    strncpy_s(directory, directorySize, fullPath, _TRUNCATE);
 
-    wchar_t* lastSlash = wcsrchr(directory, L'/');
-    //#ifdef _WIN32
-    //    // For Windows, also check for backslashes.
-    //    wchar_t* lastBackslash = wcsrchr(directory, L'\\');
-    //    if (lastBackslash && (!lastSlash || lastBackslash > lastSlash)) {
-    //        lastSlash = lastBackslash;
-    //    }
-    //#endif
-
+    char* lastSlash = strrchr(directory, '/');
     // Truncate the content after the delimiter, leaving the directory path. 
     if (lastSlash) {
         if (getParent) {
             *lastSlash = L'\0';  // End the string at the last found slash or backslash.
-            lastSlash = (lastSlash == directory) ? nullptr : wcsrchr(directory, L'/');
-//#ifdef _WIN32
-//            lastBackslash = (lastSlash == directory) ? nullptr : wcsrchr(directory, L'\\');
-//            if (lastBackslash && (!lastSlash || lastBackslash > lastSlash)) {
-//                lastSlash = lastBackslash;
-//            }
-//#endif
+            lastSlash = (lastSlash == directory) ? nullptr : strrchr(directory, '/');
         }
 
         if (lastSlash) {
             //*(lastSlash + 1) = L'\0';  // +1 Retain the slash or backslash.
-            *(lastSlash) = L'\0';
+            *(lastSlash) = '\0';
         }
-
     }
-
 }
 
-int ReadFileContent(const wchar_t* filePath, wchar_t** buffer, DWORD* size) {
-    HANDLE hFile = CreateFileW(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+int ReadFileContent(const char* filePath, char** buffer, DWORD* size) {
+    HANDLE hFile = CreateFileA(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
-        fwprintf(stderr, L"Error opening file: %d\n", GetLastError());
+        fprintf(stderr, "Error opening file: %d\n", GetLastError());
         return 0;
     }
 
@@ -203,17 +182,17 @@ int ReadFileContent(const wchar_t* filePath, wchar_t** buffer, DWORD* size) {
         return 0;
     }
 
-    *size = fileSize / sizeof(wchar_t);
-    *buffer = (wchar_t*)malloc((*size + 1) * sizeof(wchar_t)); // +1 for null termination
+    *size = fileSize;
+    *buffer = (char*)malloc((*size + 1) * sizeof(char)); // +1 for null termination
     if (!*buffer) {
-        fwprintf(stderr, L"Memory allocation error\n");
+        fprintf(stderr, "Memory allocation error\n");
         CloseHandle(hFile);
         return 0;
     }
 
     DWORD bytesRead;
     if (!ReadFile(hFile, *buffer, fileSize, &bytesRead, NULL) || bytesRead != fileSize) {
-        fwprintf(stderr, L"Error reading file: %d\n", GetLastError());
+        fprintf(stderr, "Error reading file: %d\n", GetLastError());
         CloseHandle(hFile);
         free(*buffer);
         *buffer = NULL;
@@ -226,103 +205,15 @@ int ReadFileContent(const wchar_t* filePath, wchar_t** buffer, DWORD* size) {
     return 1;
 }
 
-bool CheckFileExists(const wchar_t* filePath) {
-    DWORD dwAttrib = GetFileAttributesW(filePath);
+bool CheckFileExists(const char* filePath) {
+    DWORD dwAttrib = GetFileAttributesA(filePath);
 
     return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
         !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-bool WriteStringToFileAsUTF8(const wchar_t* filePath, const wchar_t* content) {
-    int bufferSize = WideCharToMultiByte(CP_UTF8, 0, content, -1, NULL, 0, NULL, NULL);
-    if (bufferSize == 0) {
-        fwprintf(stderr, L"Error converting to UTF-8: %d\n", GetLastError());
-        return false;
-    }
-
-    char* utf8Buffer = (char*)malloc(bufferSize);
-    if (!utf8Buffer) {
-        fwprintf(stderr, L"Memory allocation error.\n");
-        return false;
-    }
-
-    WideCharToMultiByte(CP_UTF8, 0, content, -1, utf8Buffer, bufferSize, NULL, NULL);
-
-    HANDLE hFile = CreateFileW(filePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) {
-        fwprintf(stderr, L"Error opening file for write: %d\n", GetLastError());
-        free(utf8Buffer);
-        return false;
-    }
-
-    DWORD bytesToWrite = bufferSize - 1;  // -1 to exclude the null terminator
-    DWORD bytesWritten;
-
-    if (!WriteFile(hFile, utf8Buffer, bytesToWrite, &bytesWritten, NULL) || bytesWritten != bytesToWrite) {
-        fwprintf(stderr, L"Error writing to file: %d\n", GetLastError());
-        CloseHandle(hFile);
-        free(utf8Buffer);
-        return false;
-    }
-
-    CloseHandle(hFile);
-    free(utf8Buffer);
-    return true;
-}
-
-bool CreateNewFile(const wchar_t* filePath) {
-    HANDLE hFile = CreateFileW(filePath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) {
-        if (GetLastError() == ERROR_FILE_EXISTS) {
-            fwprintf(stderr, L"File already exists.\n");
-        }
-        else {
-            fwprintf(stderr, L"Error creating file: %d\n", GetLastError());
-        }
-        return false;
-    }
-
-    CloseHandle(hFile);
-    return true;
-}
-
-wchar_t** FindPartFileChunksWithPrefix(const wchar_t* directory, const wchar_t* targetPrefix, int* count) {
-//wchar_t** FindPartFileAndDeleteEmptyFile(const wchar_t* directory, const wchar_t* targetPrefix, int* count) {
-    WIN32_FIND_DATA findFileData;
-    wchar_t searchPattern[MAX_PATH];
-    wchar_t** fileList = (wchar_t**)malloc(MAX_FILES * sizeof(wchar_t*));
-    *count = 0;
-
-    swprintf_s(searchPattern, _countof(searchPattern), L"%ls/%ls_part_*", directory, targetPrefix);
-
-    HANDLE hFind = FindFirstFile(searchPattern, &findFileData);
-
-    if (hFind == INVALID_HANDLE_VALUE) {
-        free(fileList);
-        return NULL;
-    }
-
-    do {
-        if (*count < MAX_FILES && wcsstr(findFileData.cFileName, targetPrefix)) {
-            fileList[*count] = _wcsdup(findFileData.cFileName);
-            (*count)++;
-        }
-    } while (FindNextFile(hFind, &findFileData) != 0);
-
-    FindClose(hFind);
-
-    return fileList;
-}
-
-void freeParFileChunkList(wchar_t** fileList, int count) {
-    for (int i = 0; i < count; i++) {
-        free(fileList[i]);
-    }
-    free(fileList);
-}
-
-bool GetFileSize(const wchar_t* filepath, unsigned long long* size) {
-    HANDLE hFile = CreateFile(
+bool GetFileSize(const char* filepath, unsigned long long* size) {
+    HANDLE hFile = CreateFileA(
         filepath,
         GENERIC_READ,
         FILE_SHARE_READ,
@@ -333,7 +224,7 @@ bool GetFileSize(const wchar_t* filepath, unsigned long long* size) {
     );
 
     if (hFile == INVALID_HANDLE_VALUE) {
-        wprintf(L"Error opening file %ls. Error code: %lu\n", filepath, GetLastError());
+        printf("Error opening file %s. Error code: %lu\n", filepath, GetLastError());
         return false;
     }
 
@@ -341,7 +232,7 @@ bool GetFileSize(const wchar_t* filepath, unsigned long long* size) {
     fileSize.LowPart = GetFileSize(hFile, &fileSize.HighPart);
 
     if (fileSize.LowPart == INVALID_FILE_SIZE && GetLastError() != NO_ERROR) {
-        wprintf(L"Error getting size of file %ls. Error code: %lu\n", filepath, GetLastError());
+        printf("Error getting size of file %s. Error code: %lu\n", filepath, GetLastError());
         CloseHandle(hFile);
         return false;
     }
@@ -352,11 +243,11 @@ bool GetFileSize(const wchar_t* filepath, unsigned long long* size) {
     return true;
 }
 
-wchar_t* get_current_program_directory() {
-    static wchar_t buffer[MAX_PATH];
-    GetModuleFileNameW(NULL, buffer, MAX_PATH);
+char* get_current_program_directory() {
+    static char buffer[MAX_PATH];
+    GetModuleFileNameA(NULL, buffer, MAX_PATH);
 
-    wchar_t* last_slash = wcsrchr(buffer, L'\\');
+    char* last_slash = strrchr(buffer, L'\\');
     if (last_slash) {
         *last_slash = L'\0';  // Truncate the string to remove the filename
     }
@@ -364,17 +255,17 @@ wchar_t* get_current_program_directory() {
     return buffer;
 }
 
-wchar_t* get_current_program_directory_with_forward_slash() {
-    static wchar_t buffer[MAX_PATH];
-    GetModuleFileNameW(NULL, buffer, MAX_PATH);
+char* get_current_program_directory_with_forward_slash() {
+    static char buffer[MAX_PATH];
+    GetModuleFileNameA(NULL, buffer, MAX_PATH);
 
-    wchar_t* last_slash = wcsrchr(buffer, L'\\');
+    char* last_slash = strrchr(buffer, L'\\');
     if (last_slash) {
         *last_slash = L'\0';  // Truncate the string to remove the filename
     }
 
     // Replace all backslashes with forward slashes
-    for (wchar_t* p = buffer; *p; ++p) {
+    for (char* p = buffer; *p; ++p) {
         if (*p == L'\\') {
             *p = L'/';
         }

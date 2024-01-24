@@ -120,6 +120,13 @@
       <AdditionalLibraryDirectories>E:\CppProjects\vcpkg\installed\x64-windows-static\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);jansson.lib;libcurl.lib;minizip.lib;zlib.lib;libcrypto.lib;Ws2_32.lib;Crypt32.lib;</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(SolutionDir)Repository" "$(TargetDir)Repository\" /S /Y</Command>
+    </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>
+      </Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -141,9 +148,16 @@
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);jansson.lib;libcurl.lib;minizip.lib;zlib.lib;libcrypto.lib;Ws2_32.lib;Crypt32.lib;</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCMT.lib</IgnoreSpecificDefaultLibraries>
     </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(SolutionDir)Repository" "$(TargetDir)Repository\" /S /Y</Command>
+    </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>
+      </Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Download\include\CircularQueue.h" />
+    <ClInclude Include="Config\include\SyncServiceConfig.h" />
     <ClInclude Include="Download\include\CurlRequestOpt.h" />
     <ClInclude Include="Download\include\DownloadQueue.h" />
     <ClInclude Include="File\include\FileModify.h" />
@@ -166,7 +180,6 @@
     <ClInclude Include="Controls\include\ProgressBarControls.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Controls\include\RichEditControls.h" />
-    <ClInclude Include="ServerMode\include\ServiceMode.h" />
     <ClInclude Include="Config\include\ServiceSource.h" />
     <ClInclude Include="Config\include\ServiceUse.h" />
     <ClInclude Include="Controls\include\StaticLabelControls.h" />
@@ -178,7 +191,7 @@
     <ClInclude Include="WPEnv.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Download\src\CircularQueue.cpp" />
+    <ClCompile Include="Config\src\SyncServiceConfig.cpp" />
     <ClCompile Include="Download\src\CurlRuquestOpt.cpp" />
     <ClCompile Include="Download\src\DownloadQueue.cpp" />
     <ClCompile Include="File\src\FileModify.cpp" />
@@ -199,7 +212,6 @@
     <ClCompile Include="ServerMode\src\ProcessOpt.cpp" />
     <ClCompile Include="Controls\src\ProgressBarControls.cpp" />
     <ClCompile Include="Controls\src\RichEditControls.cpp" />
-    <ClCompile Include="ServerMode\src\ServiceMode.cpp" />
     <ClCompile Include="Config\src\ServiceSource.cpp" />
     <ClCompile Include="Config\src\ServiceUse.cpp" />
     <ClCompile Include="Controls\src\StaticLabelControls.cpp" />
@@ -221,6 +233,29 @@
     <None Include=".gitignore" />
     <None Include="LICENSE.md" />
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Repository\apache\1.3.x.txt">
+      <DeploymentContent>false</DeploymentContent>
+    </Text>
+    <Text Include="Repository\apache\2.0.x.txt" />
+    <Text Include="Repository\apache\2.2.x.txt" />
+    <Text Include="Repository\apache\httpd-2.4.58.txt" />
+    <Text Include="Repository\apache\vhosts.txt" />
+    <Text Include="Repository\mysql\5.5.x.txt" />
+    <Text Include="Repository\mysql\5.6.x.txt" />
+    <Text Include="Repository\mysql\5.7.43.txt" />
+    <Text Include="Repository\nginx\0.7.x.txt" />
+    <Text Include="Repository\nginx\1.0.x.txt" />
+    <Text Include="Repository\nginx\nginx-1.24.0.txt" />
+    <Text Include="Repository\nginx\1.2.x.txt" />
+    <Text Include="Repository\nginx\1.6.x.txt" />
+    <Text Include="Repository\nginx\1.8.x.txt" />
+    <Text Include="Repository\nginx\vhosts.txt" />
+    <Text Include="Repository\php\5.x.nts.txt" />
+    <Text Include="Repository\php\5.x.ts.txt" />
+    <Text Include="Repository\php\7.x.nts.txt" />
+    <Text Include="Repository\php\php-8.3.0.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

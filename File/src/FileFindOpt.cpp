@@ -15,15 +15,15 @@ PathList* initPathList() {
     return list;
 }
 
-void addPath(PathList* list, const wchar_t* path) {
-    wchar_t** newPaths = (wchar_t**)realloc(list->paths, sizeof(wchar_t*) * (list->count + 1));
+void addPath(PathList* list, const char* path) {
+    char** newPaths = (char**)realloc(list->paths, sizeof(char*) * (list->count + 1));
     if (!newPaths) {
         // Handle memory allocation error if necessary
         return;
     }
 
     list->paths = newPaths;
-    list->paths[list->count] = _wcsdup(path);
+    list->paths[list->count] = _strdup(path);
     list->count++;
 }
 
@@ -37,44 +37,43 @@ void freePathList(PathList* list) {
     free(list);
 }
 
-void findFilesInDirectory(const wchar_t* directory, const wchar_t* targetFile, PathList* foundPaths) {
-    WIN32_FIND_DATA findFileData;
-    wchar_t searchPattern[MAX_PATH];
-    _snwprintf_s(searchPattern, MAX_PATH, _TRUNCATE, L"%ls/*.*", directory);
-
-    HANDLE hFind = FindFirstFile(searchPattern, &findFileData);
+void findFilesInDirectory(const char* directory, const char* targetFile, PathList* foundPaths) {
+    WIN32_FIND_DATAA findFileData;
+    char searchPattern[MAX_PATH];
+    _snprintf_s(searchPattern, MAX_PATH, _TRUNCATE, "%s/*.*", directory);
+    HANDLE hFind = FindFirstFileA(searchPattern, &findFileData);
     if (hFind == INVALID_HANDLE_VALUE) {
         OutputDebugString(L"fail file handle");
         return;
     }
 
     do {
-        const wchar_t* fileOrDirName = findFileData.cFileName;
+        const char* fileOrDirName = findFileData.cFileName;
 
-        if (wcscmp(fileOrDirName, L".") != 0 && wcscmp(fileOrDirName, L"..") != 0) {
+        if (strcmp(fileOrDirName, ".") != 0 && strcmp(fileOrDirName, "..") != 0) {
             if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-                wchar_t subDirectory[MAX_PATH];
-                _snwprintf_s(subDirectory, MAX_PATH, _TRUNCATE, L"%ls/%ls", directory, fileOrDirName);
+                char subDirectory[MAX_PATH];
+                _snprintf_s(subDirectory, MAX_PATH, _TRUNCATE, "%s/%s", directory, fileOrDirName);
                 findFilesInDirectory(subDirectory, targetFile, foundPaths);
             }
-            else if (wcscmp(fileOrDirName, targetFile) == 0) {
-                wchar_t fullPath[MAX_PATH];
-                _snwprintf_s(fullPath, MAX_PATH, _TRUNCATE, L"%ls/%ls", directory, fileOrDirName);
+            else if (strcmp(fileOrDirName, targetFile) == 0) {
+                char fullPath[MAX_PATH];
+                _snprintf_s(fullPath, MAX_PATH, _TRUNCATE, "%s/%s", directory, fileOrDirName);
                 addPath(foundPaths, fullPath);
             }
         }
-    } while (FindNextFile(hFind, &findFileData) != 0);
+    } while (FindNextFileA(hFind, &findFileData) != 0);
 
     FindClose(hFind);
 }
 
-void ProcessDirectory(const wchar_t* directory)
+void ProcessDirectory(const char* directory)
 {
-    WIN32_FIND_DATA findFileData;
-    wchar_t searchPattern[MAX_PATH];
-    _snwprintf_s(searchPattern, MAX_PATH, L"%ls/*.*", directory);
+    WIN32_FIND_DATAA findFileData;
+    char searchPattern[MAX_PATH];
+    _snprintf_s(searchPattern, MAX_PATH, "%s/*.*", directory);
 
-    HANDLE hFind = FindFirstFile(searchPattern, &findFileData);
+    HANDLE hFind = FindFirstFileA(searchPattern, &findFileData);
     if (hFind == INVALID_HANDLE_VALUE)
     {
         // Error handling
@@ -83,22 +82,22 @@ void ProcessDirectory(const wchar_t* directory)
     {
         do
         {
-            const wchar_t* fileOrDirName = findFileData.cFileName;
+            const char* fileOrDirName = findFileData.cFileName;
 
             // Skip the current directory "." and parent directory ".."
-            if (wcscmp(fileOrDirName, L".") != 0 && wcscmp(fileOrDirName, L"..") != 0)
+            if (strcmp(fileOrDirName, ".") != 0 && strcmp(fileOrDirName, "..") != 0)
             {
                 Log("%ls/%ls\r\n", directory, fileOrDirName);
 
                 // If the found file is a directory, search recursively inside
                 if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
-                    wchar_t subDirectory[MAX_PATH];
-                    _snwprintf_s(subDirectory, MAX_PATH, _TRUNCATE, L"%ls/%ls", directory, fileOrDirName);
+                    char subDirectory[MAX_PATH];
+                    _snprintf_s(subDirectory, MAX_PATH, _TRUNCATE, "%s/%s", directory, fileOrDirName);
                     ProcessDirectory(subDirectory);
                 }
             }
-        } while (FindNextFile(hFind, &findFileData) != 0);
+        } while (FindNextFileA(hFind, &findFileData) != 0);
         FindClose(hFind);
     }
 }

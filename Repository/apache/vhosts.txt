@@ -1,0 +1,13 @@
+<VirtualHost *:80>
+    DocumentRoot "{{TPL_VAR:DocumentRoot}}"
+    ServerName {{TPL_VAR:ServerName}}
+    ServerAlias {{TPL_VAR:ServerName}}
+    ErrorLog "{{TPL_VAR:wwwLogs}}/httpd-error.log"
+    CustomLog "{{TPL_VAR:wwwLogs}}/httpd-access.log" common
+
+    <Directory "{{TPL_VAR:DocumentRoot}}">
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>

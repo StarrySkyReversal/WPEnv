@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "WPEnv.h"
+
 #include "ListBoxControls.h"
 #include "RichEditControls.h"
 #include "ProgressBarControls.h"
@@ -10,16 +11,21 @@
 #include "ListViewControls.h"
 #include "ButtonControls.h"
 #include "WindowAdaptive.h"
-#include "ServiceSource.h"
-#include "ServiceUse.h"
 #include "FontStyle.h"
-#include "DownloadCenter.h"
-#include "ProcessMode.h"
 #include "WindowLayout.h"
 #include <commctrl.h>
 #include <shellapi.h>
 #include "TrayIconControls.h"
+
+
+#include "ServiceSource.h"
+#include "ServiceUse.h"
+
+#include "DownloadCenter.h"
+#include "ProcessMode.h"
+
 #include "ModeMonitor.h"
+#include "SyncServiceConfig.h"
 
 #define MAX_LOADSTRING 100
 
@@ -127,13 +133,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int) msg.wParam;
 }
 
-
-
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
@@ -155,16 +154,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-//
-//   FUNCTION: InitInstance(HINSTANCE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
 const int WINDOW_WIDTH = 655;
 const int WINDOW_HEIGHT = 525;
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
@@ -191,16 +180,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    return TRUE;
 }
 
-//
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  PURPOSE: Processes messages for the main window.
-//
-//  WM_COMMAND  - process the application menu
-//  WM_PAINT    - Paint the main window
-//  WM_DESTROY  - post a quit message and return
-//
-//
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static NOTIFYICONDATA nid = {};
@@ -277,7 +256,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             GetServiceVersionInfo(&softwareGroupInfo);
 
             AddNewConfig(softwareGroupInfo);
-            SyncConfigFile(softwareGroupInfo);
+            sync(softwareGroupInfo);
         }
 
             break;
@@ -327,12 +306,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
-    //case WM_CTLCOLORSTATIC:
-    //    if ((HWND)lParam == hStaticLabel)
-    //    {
-    //        return SendMessage(hStaticLabel, WM_CTLCOLORSTATIC, wParam, lParam);
-    //    }
-    //    break;
     case WM_DRAWITEM:
     {
         SendMessage((HWND)((LPDRAWITEMSTRUCT)lParam)->hwndItem, message, wParam, lParam);
@@ -351,23 +324,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
     }
     break;
-    //case WM_ERASEBKGND:
-    //    return 1;
-    //case WM_ERASEBKGND:
-    //{
-    //    HDC hdc = (HDC)wParam;
-    //    RECT rc;
-    //    GetClientRect(hWnd, &rc);
-    //    FillRect(hdc, &rc, (HBRUSH)(COLOR_WINDOW + 1));
-    //    return 1;
-    //}
-    //break;
-    //case WM_POWERBROADCAST:
-    //    if (wParam == PBT_APMRESUMEAUTOMATIC)
-    //    {
-    //        InvalidateRect(hWnd, NULL, TRUE);  // Marking the entire window area as invalid will result in WM_ PAINT message sent
-    //    }
-    //    break;
     case WM_APP_TRAYMSG:
         HandleTrayMessage(hWnd, lParam);
         return 0;

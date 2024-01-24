@@ -9,7 +9,7 @@
 CRITICAL_SECTION progressCriticalSection;
 
 void FreeSoftwareInfo(SoftwareInfo* info) {
-    if (info->version != NULL && wcscmp(info->version, L"") != 0) {
+    if (info->version != NULL && strcmp(info->version, "") != 0) {
         free((void*)info->serviceType);
         free((void*)info->version);
         free((void*)info->link);
@@ -27,19 +27,19 @@ void FreeSoftwareGroupInfo(SoftwareGroupInfo* group) {
     delete group;
 }
 
-SoftwareInfo DeepCopySoftwareInfo(const SoftwareInfo* source, const wchar_t* serviceType) {
+SoftwareInfo DeepCopySoftwareInfo(const SoftwareInfo* source, const char* serviceType) {
     SoftwareInfo dest;
     if (source->version != NULL) {
-        dest.serviceType = _wcsdup(serviceType);
-        dest.version = _wcsdup(source->version);
-        dest.link = _wcsdup(source->link);
-        dest.fileFullName = _wcsdup(source->fileFullName);
+        dest.serviceType = _strdup(serviceType);
+        dest.version = _strdup(source->version);
+        dest.link = _strdup(source->link);
+        dest.fileFullName = _strdup(source->fileFullName);
     }
     else {
-        dest.serviceType = L"";
-        dest.version = L"";
-        dest.link = L"";
-        dest.fileFullName = L"";
+        dest.serviceType = "";
+        dest.version = "";
+        dest.link = "";
+        dest.fileFullName = "";
     }
 
     return dest;
@@ -48,10 +48,10 @@ SoftwareInfo DeepCopySoftwareInfo(const SoftwareInfo* source, const wchar_t* ser
 SoftwareGroupInfo* DeepCopySoftwareGroupInfo(const SoftwareGroupInfo* source) {
     SoftwareGroupInfo* dest = new SoftwareGroupInfo;
 
-    dest->php = DeepCopySoftwareInfo(&source->php, L"php");
-    dest->mysql = DeepCopySoftwareInfo(&source->mysql, L"mysql");
-    dest->apache = DeepCopySoftwareInfo(&source->apache, L"apache");
-    dest->nginx = DeepCopySoftwareInfo(&source->nginx, L"nginx");
+    dest->php = DeepCopySoftwareInfo(&source->php, "php");
+    dest->mysql = DeepCopySoftwareInfo(&source->mysql, "mysql");
+    dest->apache = DeepCopySoftwareInfo(&source->apache, "apache");
+    dest->nginx = DeepCopySoftwareInfo(&source->nginx, "nginx");
 
     return dest;
 }
@@ -71,36 +71,34 @@ DWORD WINAPI DispatchManagerDownloadThread(LPVOID lParam) {
     softwareItems[3] = &softwareGroupInfo->nginx;
 
     for (int i = 0; i < 4; i++) {
-        if (wcslen(softwareItems[i]->link) > 0) {
+        if (strlen(softwareItems[i]->link) > 0) {
             FileList* fileList = NULL;
             if (CheckDownloadFileExists(softwareItems[i]->version, &fileList)) {
-                wchar_t tempVersionDirectory[1024];
-                swprintf_s(tempVersionDirectory, sizeof(tempVersionDirectory) / sizeof(wchar_t), L"%ls/%ls/%ls",
+                char tempVersionDirectory[1024];
+                sprintf_s(tempVersionDirectory, sizeof(tempVersionDirectory), "%s/%s/%s",
                     DIRECTORY_SERVICE, softwareItems[i]->serviceType, softwareItems[i]->version);
 
                 if (DirectoryExists(tempVersionDirectory)) {
-                    wchar_t serverFolderMsg[512];
-                    swprintf_s(serverFolderMsg, _countof(serverFolderMsg), L"The corresponding version folder already exists: %ls/%ls/%ls\r\n",
+                    char serverFolderMsg[512];
+                    sprintf_s(serverFolderMsg, sizeof(serverFolderMsg), "The corresponding version folder already exists: %s/%s/%s\r\n",
                         DIRECTORY_SERVICE, softwareItems[i]->serviceType, softwareItems[i]->version);
                     AppendEditInfo(serverFolderMsg);
 
                     continue;
                 }
 
-                wchar_t unzipTempMsg[512] = { '\0' };
-                swprintf_s(unzipTempMsg, sizeof(unzipTempMsg) / sizeof(wchar_t), L"INFO: Target file %ls exists\r\n", softwareItems[i]->fileFullName);
+                char unzipTempMsg[512] = { '\0' };
+                sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "INFO: Target file %s exists\r\n", softwareItems[i]->fileFullName);
                 AppendEditInfo(unzipTempMsg);
 
                 UnzipFile(softwareItems[i]);
 
-                //Log(L"Download failed, file version %ls exists.\r\n", softwareItems[i]->version);
                 continue;
             }
 
             FreeCheckDownloadFileExists(fileList);
 
             // UnzipFile
-
             HANDLE managerThread = CreateThread(NULL, 0, DownloadManagerThread, softwareItems[i], 0, NULL);
             if (managerThread) {
                 WaitForSingleObject(managerThread, INFINITE);

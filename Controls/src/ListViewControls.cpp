@@ -4,6 +4,7 @@
 #include "WindowLayout.h"
 #include "ListViewControls.h"
 #include "Log.h"
+#include "Common.h"
 
 #pragma comment(lib, "Comctl32.lib")
 
@@ -273,8 +274,13 @@ int GetListViewCount(HWND hWnd) {
     return ListView_GetItemCount(hWnd);
 }
 
-void AddListViewItem(HWND hWnd, int itemIndex, int ColumnIndex, wchar_t* text) {
-    ListView_SetItemText(hWnd, itemIndex, ColumnIndex, text);
+void AddListViewItem(HWND hWnd, int itemIndex, int ColumnIndex, const char* text) {
+    wchar_t* wText = new wchar_t[256];
+    MToW(text, wText, 256);
+
+    ListView_SetItemText(hWnd, itemIndex, ColumnIndex, wText);
+
+    //delete[] wText;
 }
 
 int GetListViewSelectedIndex(HWND hWnd) {
@@ -285,6 +291,13 @@ bool DeleteListViewItem(HWND hWnd, int selectedIndex) {
     return ListView_DeleteItem(hWnd, selectedIndex);
 }
 
-void GetListViewSelectedText(HWND hWnd, int itemIndex, int columnIndex, wchar_t* buffer, DWORD bufferSize) {
-    ListView_GetItemText(hWnd, itemIndex, columnIndex, buffer, bufferSize);
+void GetListViewSelectedText(HWND hWnd, int itemIndex, int columnIndex, char* buffer, DWORD bufferSize) {
+    wchar_t* wText = new wchar_t[512];
+
+    ListView_GetItemText(hWnd, itemIndex, columnIndex, (LPTSTR)wText, bufferSize);
+
+    size_t convertedChars = 0;
+    wcstombs_s(&convertedChars, buffer, bufferSize, wText, _TRUNCATE);
+
+    delete[] wText;
 }

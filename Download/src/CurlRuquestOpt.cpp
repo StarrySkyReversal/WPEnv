@@ -7,7 +7,6 @@
 #include "DownloadThread.h"
 #include "Common.h"
 #include <math.h>
-#include "CircularQueue.h"
 #include <io.h>
 
 char* my_strndup(const char* s, size_t n) {
@@ -92,14 +91,6 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 	DownloadPart** partGroup = (DownloadPart**)param;
 	//ULONGLONG uTmp = GetTickCount64();
 
-	char url[256];
-	WToM(partGroup[0]->url, url, sizeof(url));
-
-	//FILE* debugFile;
-	//char tempMsg[256];
-	//sprintf_s(tempMsg, sizeof(tempMsg), "downloads/a_debug_%llu.txt", part->startByte);
-	//fopen_s(&debugFile, tempMsg, "wt");
-
 	curl_slist* headers = NULL;
 	// Append headers to the list
 	headers = curl_slist_append(headers, "Connection: keep-alive");
@@ -112,11 +103,11 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 
 	for (int i = 0; i < numSubPartSize; i++) {
 		//CURL* easy_handle;
-		SetCurlComponent(url, partGroup[i], headers);
+		SetCurlComponent(partGroup[0]->url, partGroup[i], headers);
 
 		//Log("timestamp: %llu;count_filename:%ls\r\n", partGroup[i]->timestamp, partGroup[i]->filepath);
-		if (_wfopen_s(&partGroup[i]->file, partGroup[i]->filepath, L"ab")) {  // ab
-			Log("timestamp: %llu;Failed to open file: %ls errorCode:%d\r\n", partGroup[i]->timestamp, partGroup[i]->filepath, GetLastError());
+		if (fopen_s(&partGroup[i]->file, partGroup[i]->filepath, "ab")) {  // ab
+			Log("timestamp: %llu;Failed to open file: %s errorCode:%d\r\n", partGroup[i]->timestamp, partGroup[i]->filepath, GetLastError());
 			break;
 		}
 
@@ -200,7 +191,7 @@ size_t header_callback(char* buffer, size_t size, size_t nitems, void* userdata)
 	return nitems * size;
 }
 
-unsigned long long CurlGetRemoteFileSize(const wchar_t* url) {
+unsigned long long CurlGetRemoteFileSize(const char* url) {
 	CURL* curl;
 	CURLcode res;
 	curl = curl_easy_init();
@@ -208,9 +199,6 @@ unsigned long long CurlGetRemoteFileSize(const wchar_t* url) {
 		Log("CURL create fail\r\n");
 		return 0;
 	}
-
-	char mUrl[256];
-	WToM(url, mUrl, sizeof(mUrl));
 
 	ULONGLONG fileSize = 0;
 	curl_slist* headers = NULL;
@@ -222,7 +210,7 @@ unsigned long long CurlGetRemoteFileSize(const wchar_t* url) {
 	//headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate, br");
 	headers = curl_slist_append(headers, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
 
-	curl_easy_setopt(curl, CURLOPT_URL, mUrl);
+	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_RANGE, "0-0");
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);

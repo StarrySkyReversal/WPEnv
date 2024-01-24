@@ -6,28 +6,22 @@
 #define MAX_CONFIG_LEN 256
 
 typedef struct {
-    wchar_t php[MAX_CONFIG_LEN];
-    wchar_t mysql[MAX_CONFIG_LEN];
-    wchar_t webService[MAX_CONFIG_LEN];
+    char php[MAX_CONFIG_LEN];
+    char mysql[MAX_CONFIG_LEN];
+    char webService[MAX_CONFIG_LEN];
     int itemCount;
 } ServiceUseConfig;
 
-int ReadServiceUseConfig(const wchar_t* filePath, ServiceUseConfig* configs);
-int AddConfigToServiceUse(const wchar_t* filePath, const wchar_t* config);
+int ReadServiceUseConfig(const char* filePath, ServiceUseConfig* configs);
+int AddConfigToServiceUse(const char* filePath, const char* config);
 
 void LoadServiceUseDataToListView();
 
 bool AddNewConfig(SoftwareGroupInfo softwareGroupInfo);
+
 void RemoveListViewSelectedItem();
 
 bool GetServiceUseItem(ServiceUseConfig* config);
 
-void InitializeApacheConfigFile(SoftwareInfo softwareInfo);
+void getApacheVersionAbsBaseDir(const char* version, char* buffer, int bufferSize);
 
-void InitializeNginxConfigFile(SoftwareInfo softwareInfo);
-
-void SyncConfigFile(SoftwareGroupInfo softwareGroupInfo);
-
-void syncConfigFilePHPAndApache(const wchar_t* phpVersion, const wchar_t* apacheVersion);
-
-void syncPHPConfigFile(SoftwareInfo softwareInfo);

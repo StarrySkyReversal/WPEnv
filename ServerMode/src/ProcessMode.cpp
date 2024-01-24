@@ -10,6 +10,7 @@
 #include "BaseFileOpt.h"
 #include "ModeMonitor.h"
 #include "ProcessOpt.h"
+#include <io.h>
 
 BOOL bPHPRunning = false;
 BOOL bMysqlRunning = false;
@@ -17,10 +18,10 @@ BOOL bApacheRunning = false;
 BOOL bNginxRunning = false;
 
 struct ProcessDetail {
-    const wchar_t* cmd;
-    const wchar_t* dir;
-    const wchar_t* processName;
-    const wchar_t* serviceName;
+    const char* cmd;
+    const char* dir;
+    const char* processName;
+    const char* serviceName;
     PROCESS_INFORMATION pi;
 };
 
@@ -42,7 +43,7 @@ struct ProcessPipe {
     HANDLE hRead;
     HANDLE hWrite;
     HANDLE hProcess;
-    const wchar_t* processName;
+    const char* processName;
     //HANDLE hThread;
 };
 
@@ -66,17 +67,14 @@ DWORD ReadFromPipeThread(LPVOID lpParam) {
         if (ReadFile(processPipe->hRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL)) {
             buffer[bytesRead] = '\0';
 
-            wchar_t wBuffer[65535] = { '\0' };
-            MToW(buffer, wBuffer, sizeof(wBuffer) / sizeof(wchar_t));
-
-            wchar_t wOutputBuffer[65525];
-            swprintf_s(wOutputBuffer, _countof(wOutputBuffer), L"INFO: Create process %ls result: %ls \r\n", processPipe->processName, wBuffer);
+            char wOutputBuffer[65525];
+            sprintf_s(wOutputBuffer, sizeof(wOutputBuffer), "INFO: Create process %s result: %s \r\n", processPipe->processName, buffer);
 
             AppendEditInfo(wOutputBuffer);
             //AppendEditInfo(wBuffer);
 
             if (!EndsWithNewline(buffer)) {
-                AppendEditInfo(L"\r\n");
+                AppendEditInfo("\r\n");
             }
         }
     }
@@ -89,14 +87,14 @@ DWORD ReadFromPipeThread(LPVOID lpParam) {
 
 HANDLE hJob;
 bool CalllCreateProcess(ProcessDetail* pProcessDetail, bool waitProcess = false) {
-    STARTUPINFO si;
+    STARTUPINFOA si;
 
-    size_t cmdStrLen = wcslen(pProcessDetail->cmd) + 1;
-    wchar_t* wCmdStr = (wchar_t*)malloc(cmdStrLen * sizeof(wchar_t));
+    size_t cmdStrLen = strlen(pProcessDetail->cmd) + 1;
+    char* wCmdStr = (char*)malloc(cmdStrLen * sizeof(char));
     if (!wCmdStr) {
         return false;
     }
-    wcscpy_s(wCmdStr, cmdStrLen, pProcessDetail->cmd);
+    strcpy_s(wCmdStr, cmdStrLen, pProcessDetail->cmd);
 
     hJob = CreateJobObject(NULL, NULL);
     if (hJob == NULL) {
@@ -137,7 +135,7 @@ bool CalllCreateProcess(ProcessDetail* pProcessDetail, bool waitProcess = false)
 
     ZeroMemory(&(pProcessDetail->pi), sizeof(pProcessDetail->pi));
 
-    if (CreateProcess(NULL, wCmdStr, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, pProcessDetail->dir, &si, &(pProcessDetail->pi))) {
+    if (CreateProcessA(NULL, wCmdStr, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, pProcessDetail->dir, &si, &(pProcessDetail->pi))) {
         if (!AssignProcessToJobObject(hJob, pProcessDetail->pi.hProcess)) {
             Log("AssignProcessToJobObject error.\r\n");
             TerminateProcess(pProcessDetail->pi.hProcess, 1);
@@ -188,17 +186,17 @@ bool CalllCreateProcess(ProcessDetail* pProcessDetail, bool waitProcess = false)
 struct WebDaemonService {
     bool bRun;
 
-    const wchar_t* phpExe;
-    const wchar_t* phpExePath;
-    const wchar_t* phpExeDirectory;
+    const char* phpExe;
+    const char* phpExePath;
+    const char* phpExeDirectory;
 
-    const wchar_t* mysqldExe;
-    const wchar_t* mysqldExePath;
-    const wchar_t* mysqldExeDirectory;
+    const char* mysqldExe;
+    const char* mysqldExePath;
+    const char* mysqldExeDirectory;
 
-    const wchar_t* webServiceExe;
-    const wchar_t* webServiceExePath;
-    const wchar_t* webServiceExeDirectory;
+    const char* webServiceExe;
+    const char* webServiceExePath;
+    const char* webServiceExeDirectory;
 };
 
 WebDaemonService webDaemonServiceInstance;
@@ -211,36 +209,36 @@ ProcessDetail* pWebServiceProcessDetail = nullptr;
 DWORD phpProcess(ServiceUseConfig* serviceUse) {
     PathList* pathsPHP = initPathList();
 
-    wchar_t phpDirectoryPath[512];
-    swprintf_s(phpDirectoryPath, _countof(phpDirectoryPath), L"%ls/php/%ls", DIRECTORY_SERVICE, serviceUse->php);
+    char phpDirectoryPath[512];
+    sprintf_s(phpDirectoryPath, sizeof(phpDirectoryPath), "%s/php/%s", DIRECTORY_SERVICE, serviceUse->php);
 
-    findFilesInDirectory(phpDirectoryPath, L"php-cgi.exe", pathsPHP);
+    findFilesInDirectory(phpDirectoryPath, "php-cgi.exe", pathsPHP);
     if (pathsPHP->count != 1) {
-        LogAndMsgBox("%ls program as not found\r\n", serviceUse->php);
+        LogAndMsgBox("%s program as not found\r\n", serviceUse->php);
         return 1;
     }
 
-    wchar_t phpRunCmd[1024] = { '\0' };
-    swprintf_s(phpRunCmd, _countof(phpRunCmd),
-        L"%ls -b 127.0.0.1:9000", pathsPHP->paths[0]);
+    char phpRunCmd[1024] = { '\0' };
+    sprintf_s(phpRunCmd, sizeof(phpRunCmd),
+        "%s -b 127.0.0.1:9000", pathsPHP->paths[0]);
 
     // Start php
-    pPhpProcessDetail->processName = L"php-cgi.exe";
+    pPhpProcessDetail->processName = "php-cgi.exe";
     pPhpProcessDetail->cmd = phpRunCmd;
     pPhpProcessDetail->dir = phpDirectoryPath;
     if (CalllCreateProcess(pPhpProcessDetail) == true) {
-        AppendEditInfo(L"INFO: PHP runing.\r\n");
+        AppendEditInfo("INFO: PHP runing.\r\n");
     }
     else {
-        AppendEditInfo(L"INFO: PHP start fail.\r\n");
+        AppendEditInfo("INFO: PHP start fail.\r\n");
     }
 
-    wchar_t phpBinDirectory[256];
-    GetDirectoryFromPath(pathsPHP->paths[0], phpBinDirectory, sizeof(phpBinDirectory) / sizeof(wchar_t));
+    char phpBinDirectory[256];
+    GetDirectoryFromPath(pathsPHP->paths[0], phpBinDirectory, sizeof(phpBinDirectory));
 
-    webDaemonServiceInstance.phpExe = L"php-cgi.exe";
-    webDaemonServiceInstance.phpExePath = _wcsdup(pathsPHP->paths[0]);
-    webDaemonServiceInstance.phpExeDirectory = _wcsdup(phpBinDirectory);
+    webDaemonServiceInstance.phpExe = "php-cgi.exe";
+    webDaemonServiceInstance.phpExePath = _strdup(pathsPHP->paths[0]);
+    webDaemonServiceInstance.phpExeDirectory = _strdup(phpBinDirectory);
 
     freePathList(pathsPHP);
     bPHPRunning = true;
@@ -253,26 +251,26 @@ DWORD mysqlClientProcess(ServiceUseConfig* serviceUse, bool bMysqlInit) {
     if (bMysqlInit == true) {
         PathList* pathsMysqlClient = initPathList();
 
-        wchar_t mysqlClientDirectoryPath[512];
-        swprintf_s(mysqlClientDirectoryPath, _countof(mysqlClientDirectoryPath), L"%ls/mysql/%ls", DIRECTORY_SERVICE, serviceUse->mysql);
+        char mysqlClientDirectoryPath[512];
+        sprintf_s(mysqlClientDirectoryPath, sizeof(mysqlClientDirectoryPath), "%s/mysql/%s", DIRECTORY_SERVICE, serviceUse->mysql);
 
-        findFilesInDirectory(mysqlClientDirectoryPath, L"mysql.exe", pathsMysqlClient);
+        findFilesInDirectory(mysqlClientDirectoryPath, "mysql.exe", pathsMysqlClient);
         if (pathsMysqlClient->count != 1) {
-            LogAndMsgBox("%ls program mysqlclient as not found.\r\n", serviceUse->mysql);
+            LogAndMsgBox("%s program mysqlclient as not found.\r\n", serviceUse->mysql);
             return 1;
         }
 
         // format get bin directory
-        wchar_t mysqlClientBinDirectory[1024] = { '\0' };
-        GetDirectoryFromPath(pathsMysqlClient->paths[0], mysqlClientBinDirectory, sizeof(mysqlClientBinDirectory) / sizeof(wchar_t));
+        char mysqlClientBinDirectory[1024] = { '\0' };
+        GetDirectoryFromPath(pathsMysqlClient->paths[0], mysqlClientBinDirectory, sizeof(mysqlClientBinDirectory));
 
         // Initialized after mysql set password
         // initialized root user password
-        wchar_t mysqlClientCmdInitRootUser[1024] = { '\0' };
-        swprintf_s(mysqlClientCmdInitRootUser, _countof(mysqlClientCmdInitRootUser),
-            L"%ls -u root -e \"ALTER USER 'root'@'localhost' IDENTIFIED BY 'root'; FLUSH PRIVILEGES;\"", pathsMysqlClient->paths[0]);
+        char mysqlClientCmdInitRootUser[1024] = { '\0' };
+        sprintf_s(mysqlClientCmdInitRootUser, sizeof(mysqlClientCmdInitRootUser),
+            "%s -u root -e \"ALTER USER 'root'@'localhost' IDENTIFIED BY 'root'; FLUSH PRIVILEGES;\"", pathsMysqlClient->paths[0]);
 
-        pMysqlClientProcessDetail->processName = L"mysql.exe";
+        pMysqlClientProcessDetail->processName = "mysql.exe";
         pMysqlClientProcessDetail->cmd = mysqlClientCmdInitRootUser;
         pMysqlClientProcessDetail->dir = mysqlClientBinDirectory;
         CalllCreateProcess(pMysqlClientProcessDetail);
@@ -287,27 +285,27 @@ DWORD mysqlClientProcess(ServiceUseConfig* serviceUse, bool bMysqlInit) {
 DWORD mysqlServiceProcess(ServiceUseConfig* serviceUse, bool* bMysqlInit) {
     PathList* pathsMysql = initPathList();
 
-    wchar_t mysqldDirectoryPath[512];
-    swprintf_s(mysqldDirectoryPath, _countof(mysqldDirectoryPath), L"%ls/mysql/%ls", DIRECTORY_SERVICE, serviceUse->mysql);
+    char mysqldDirectoryPath[512];
+    sprintf_s(mysqldDirectoryPath, sizeof(mysqldDirectoryPath), "%s/mysql/%s", DIRECTORY_SERVICE, serviceUse->mysql);
 
-    findFilesInDirectory(mysqldDirectoryPath, L"mysqld.exe", pathsMysql);
+    findFilesInDirectory(mysqldDirectoryPath, "mysqld.exe", pathsMysql);
     if (pathsMysql->count != 1) {
-        LogAndMsgBox("%ls program mysqld as not found.\r\n", serviceUse->mysql);
+        LogAndMsgBox("%s program mysqld as not found.\r\n", serviceUse->mysql);
 
         freePathList(pathsMysql);
         return 1;
     }
 
     // mysql data directory
-    wchar_t mysqlDataDirectory[256];
-    swprintf_s(mysqlDataDirectory, _countof(mysqlDataDirectory), L"%ls/data", mysqldDirectoryPath);
+    char mysqlDataDirectory[256];
+    sprintf_s(mysqlDataDirectory, sizeof(mysqlDataDirectory), "%s/data", mysqldDirectoryPath);
 
     // format get bin directory
-    wchar_t mysqldBinDirectory[1024] = { '\0' };
-    GetDirectoryFromPath(pathsMysql->paths[0], mysqldBinDirectory, sizeof(mysqldBinDirectory) / sizeof(wchar_t));
+    char mysqldBinDirectory[1024] = { '\0' };
+    GetDirectoryFromPath(pathsMysql->paths[0], mysqldBinDirectory, sizeof(mysqldBinDirectory));
 
     // mysql initialized
-    errno_t mysqlDataDirectoryCheck = _waccess_s(mysqlDataDirectory, 0);
+    errno_t mysqlDataDirectoryCheck = _access(mysqlDataDirectory, 0);
 
     *bMysqlInit = false;
     if (mysqlDataDirectoryCheck != 0) {
@@ -317,42 +315,42 @@ DWORD mysqlServiceProcess(ServiceUseConfig* serviceUse, bool* bMysqlInit) {
         ////////////////////////////////////////////////////////////////////////
         // No need to set a password --initialize-insecure,and not use --initialize
         // If you encounter an error, you can add the --console argument at the end to allow the console to output in real-time. This is specific to MYSQL.
-        wchar_t mysqldCmdInitDataDirectory[1024] = { '\0' };
-        swprintf_s(mysqldCmdInitDataDirectory, _countof(mysqldCmdInitDataDirectory),
-            L"%ls --initialize-insecure --explicit_defaults_for_timestamp --datadir=data", pathsMysql->paths[0]);
+        char mysqldCmdInitDataDirectory[1024] = { '\0' };
+        sprintf_s(mysqldCmdInitDataDirectory, sizeof(mysqldCmdInitDataDirectory),
+            "%s --initialize-insecure --explicit_defaults_for_timestamp --datadir=data", pathsMysql->paths[0]);
         ProcessDetail* pMysqlInitProcessDetail = new ProcessDetail;
 
-        pMysqlInitProcessDetail->processName = L"mysqld.exe";
+        pMysqlInitProcessDetail->processName = "mysqld.exe";
         pMysqlInitProcessDetail->cmd = mysqldCmdInitDataDirectory;
         pMysqlInitProcessDetail->dir = mysqldBinDirectory;
         if (CalllCreateProcess(pMysqlInitProcessDetail, true) == true) {
-            AppendEditInfo(L"INFO: Mysql initialized.\r\n");
+            AppendEditInfo("INFO: Mysql initialized.\r\n");
         }
         else {
-            AppendEditInfo(L"INFO: Mysql initialize fail.\r\n");
+            AppendEditInfo("INFO: Mysql initialize fail.\r\n");
         }
         delete pMysqlInitProcessDetail;
         ////////////////////////////////////////////////////////////////////////
     }
 
     // Start mysql
-    pMysqlProcessDetail->processName = L"mysqld.exe";
-    wchar_t mysqldCmd[256];
-    //swprintf_s(mysqldCmd, _countof(mysqldCmd), L"%ls --explicit_defaults_for_timestamp --console", pathsMysql->paths[0]);
-    swprintf_s(mysqldCmd, _countof(mysqldCmd), L"%ls", pathsMysql->paths[0]);
+    pMysqlProcessDetail->processName = "mysqld.exe";
+    char mysqldCmd[256];
+    //sprintf_s(mysqldCmd, sizeof(mysqldCmd), "%s --explicit_defaults_for_timestamp --console", pathsMysql->paths[0]);
+    sprintf_s(mysqldCmd, sizeof(mysqldCmd), "%s", pathsMysql->paths[0]);
     pMysqlProcessDetail->cmd = mysqldCmd;
     pMysqlProcessDetail->dir = mysqldBinDirectory;
 
     if (CalllCreateProcess(pMysqlProcessDetail) == true) {
-        AppendEditInfo(L"INFO: Mysql runing.\r\n");
+        AppendEditInfo("INFO: Mysql runing.\r\n");
     }
     else {
-        AppendEditInfo(L"INFO: Mysql start fail.\r\n");
+        AppendEditInfo("INFO: Mysql start fail.\r\n");
     }
 
-    webDaemonServiceInstance.mysqldExe = L"mysqld.exe";
-    webDaemonServiceInstance.mysqldExePath = _wcsdup(pathsMysql->paths[0]);
-    webDaemonServiceInstance.mysqldExeDirectory = _wcsdup(mysqldBinDirectory);
+    webDaemonServiceInstance.mysqldExe = "mysqld.exe";
+    webDaemonServiceInstance.mysqldExePath = _strdup(pathsMysql->paths[0]);
+    webDaemonServiceInstance.mysqldExeDirectory = _strdup(mysqldBinDirectory);
 
     bMysqlRunning = true;
 
@@ -364,57 +362,57 @@ DWORD mysqlServiceProcess(ServiceUseConfig* serviceUse, bool* bMysqlInit) {
 DWORD webServiceProcess(ServiceUseConfig* serviceUse) {
     PathList* pathsWebservice = initPathList();
 
-    const wchar_t* webServiceType;
-    const wchar_t* webServiceBinExe;
-    if (wcsncmp(serviceUse->webService, L"httpd", 5) == 0) {
-        webServiceType = L"apache";
-        webServiceBinExe = L"httpd.exe";
+    const char* webServiceType;
+    const char* webServiceBinExe;
+    if (strncmp(serviceUse->webService, "httpd", 5) == 0) {
+        webServiceType = "apache";
+        webServiceBinExe = "httpd.exe";
     }
     else {
-        webServiceType = L"nginx";
-        webServiceBinExe = L"nginx.exe";
+        webServiceType = "nginx";
+        webServiceBinExe = "nginx.exe";
     }
 
-    wchar_t webServiceDirectoryPath[512];
-    swprintf_s(webServiceDirectoryPath, _countof(webServiceDirectoryPath), L"%ls/%ls/%ls", DIRECTORY_SERVICE, webServiceType, serviceUse->webService);
+    char webServiceDirectoryPath[512];
+    sprintf_s(webServiceDirectoryPath, sizeof(webServiceDirectoryPath), "%s/%s/%s", DIRECTORY_SERVICE, webServiceType, serviceUse->webService);
 
     findFilesInDirectory(webServiceDirectoryPath, webServiceBinExe, pathsWebservice);
 
     if (pathsWebservice->count != 1) {
-        LogAndMsgBox("%ls program as not found. \r\n", serviceUse->webService);
+        LogAndMsgBox("%s program as not found. \r\n", serviceUse->webService);
         return 1;
     }
 
     // Start webservice apache || nginx
-    wchar_t webServiceBinDirectory[256];
-    GetDirectoryFromPath(pathsWebservice->paths[0], webServiceBinDirectory, sizeof(webServiceBinDirectory) / sizeof(wchar_t));
+    char webServiceBinDirectory[256];
+    GetDirectoryFromPath(pathsWebservice->paths[0], webServiceBinDirectory, sizeof(webServiceBinDirectory));
 
     pWebServiceProcessDetail->processName = webServiceBinExe;
     pWebServiceProcessDetail->cmd = pathsWebservice->paths[0];
     pWebServiceProcessDetail->dir = webServiceBinDirectory;
 
-    wchar_t* tempServiceProcessName;
-    tempServiceProcessName = _wcsdup(webServiceType);
+    char* tempServiceProcessName;
+    tempServiceProcessName = _strdup(webServiceType);
 
     tempServiceProcessName[0] = toupper(tempServiceProcessName[0]);
 
     if (CalllCreateProcess(pWebServiceProcessDetail) == true) {
-        wchar_t successMsg[256];
-        swprintf_s(successMsg, _countof(successMsg), L"INFO: %ls is running\r\n", tempServiceProcessName);
+        char successMsg[256];
+        sprintf_s(successMsg, sizeof(successMsg), "INFO: %s is running\r\n", tempServiceProcessName);
         AppendEditInfo(successMsg);
     }
     else {
-        wchar_t failMsg[256];
-        swprintf_s(failMsg, _countof(failMsg), L"INFO: %ls start fail\r\n", tempServiceProcessName);
+        char failMsg[256];
+        sprintf_s(failMsg, sizeof(failMsg), "INFO: %s start fail\r\n", tempServiceProcessName);
         AppendEditInfo(failMsg);
     }
 
     webDaemonServiceInstance.webServiceExe = webServiceBinExe;
-    webDaemonServiceInstance.webServiceExePath = _wcsdup(pathsWebservice->paths[0]);
-    webDaemonServiceInstance.webServiceExeDirectory = _wcsdup(webServiceBinDirectory);
+    webDaemonServiceInstance.webServiceExePath = _strdup(pathsWebservice->paths[0]);
+    webDaemonServiceInstance.webServiceExeDirectory = _strdup(webServiceBinDirectory);
 
-    bApacheRunning = webServiceType == L"apache" ? true : false;
-    bNginxRunning = webServiceType == L"nginx" ? true : false;
+    bApacheRunning = strcmp(webServiceType, "apache") == 0 ? true : false;
+    bNginxRunning = strcmp(webServiceType, "nginx") == 0 ? true : false;
 
     free(tempServiceProcessName);
     freePathList(pathsWebservice);
@@ -435,30 +433,25 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
         return 1;
     }
 
-    // ÇÐ»»apache ºÍ phpµÄÅäÖÃÄ£¿é
-    if (wcsncmp(serviceUse->webService, L"httpd", 5) == 0) {
-        if (wcsstr(serviceUse->php, L"nts") == NULL) {
-            syncConfigFilePHPAndApache(serviceUse->php, serviceUse->webService);
-        }
-        else {
-            free(serviceUse);
-
-            LogAndMsgBox("php apache is not ts version.\r\n");
-            return 1;
-        }
-    }
-
     ClearRichEdit();
 
     ///////////////////////PHP/////////////////////////
-    phpProcess(serviceUse);
+    if (phpProcess(serviceUse) != 0) {
+        return 0;
+    }
     ///////////////////MYSQL1//////////////////////////
     bool bMysqlInit = false;
-    mysqlServiceProcess(serviceUse, &bMysqlInit);
+    if (mysqlServiceProcess(serviceUse, &bMysqlInit) != 0) {
+        return 0;
+    }
     ///////////////////MYSQL2//////////////////////////
-    mysqlClientProcess(serviceUse, bMysqlInit);
+    if (mysqlClientProcess(serviceUse, bMysqlInit) != 0) {
+        return 0;
+    }
     /////////////////WebService////////////////////////
-    webServiceProcess(serviceUse);
+    if (webServiceProcess(serviceUse) != 0) {
+        return 0;
+    }
 
     webDaemonServiceInstance.bRun = true;
 
@@ -496,51 +489,51 @@ DWORD WINAPI DaemonMonitorService(LPVOID lParam) {
 
     while (true) {
         EnterCriticalSection(&daemonMonitorServiceCs);
-        //const wchar_t* processes[] = { L"php-cgi.exe", L"mysqld.exe", L"httpd.exe", L"nginx.exe"};
-        const wchar_t* phpProcesses[] = { L"php-cgi.exe"};
-        const wchar_t* mysqlProcesses[] = { L"mysqld.exe" };
-        const wchar_t* apacheProcesses[] = { L"httpd.exe" };
-        const wchar_t* nginxProcesses[] = { L"nginx.exe" };
+        //const char* processes[] = { L"php-cgi.exe", L"mysqld.exe", L"httpd.exe", L"nginx.exe"};
+        const char* phpProcesses[] = { "php-cgi.exe"};
+        const char* mysqlProcesses[] = { "mysqld.exe" };
+        const char* apacheProcesses[] = { "httpd.exe" };
+        const char* nginxProcesses[] = { "nginx.exe" };
 
         DWORD currentPHPHash = getTargetProcessesHash(phpProcesses, sizeof(phpProcesses) / sizeof(phpProcesses[0]));
         DWORD currentMysqlHash = getTargetProcessesHash(mysqlProcesses, sizeof(mysqlProcesses) / sizeof(mysqlProcesses[0]));
         DWORD currentApacheHash = getTargetProcessesHash(apacheProcesses, sizeof(apacheProcesses) / sizeof(apacheProcesses[0]));
         DWORD currentNginxHash = getTargetProcessesHash(nginxProcesses, sizeof(nginxProcesses) / sizeof(nginxProcesses[0]));
 
-        if ((currentPHPHash != previousPHPHash || isFirstRun == true) && isSelfChildProcessOfCurrent(L"php-cgi.exe") == 2 && IsHttpdParentRunning(L"php-cgi.exe")) {
-            AppendEditInfo(L"WARNING: PHP is not started by this program.\r\n");
+        if ((currentPHPHash != previousPHPHash || isFirstRun == true) && isSelfChildProcessOfCurrent("php-cgi.exe") == 2 && IsHttpdParentRunning("php-cgi.exe")) {
+            AppendEditInfo("WARNING: PHP is not started by this program.\r\n");
         }
 
-        if ((previousMysqlHash != currentMysqlHash || isFirstRun == true) && isSelfChildProcessOfCurrent(L"mysqld.exe") == 2 && IsHttpdParentRunning(L"mysqld.exe")) {
-            AppendEditInfo(L"WARNING: Mysql is not started by this program.\r\n");
+        if ((previousMysqlHash != currentMysqlHash || isFirstRun == true) && isSelfChildProcessOfCurrent("mysqld.exe") == 2 && IsHttpdParentRunning("mysqld.exe")) {
+            AppendEditInfo("WARNING: Mysql is not started by this program.\r\n");
         }
 
-        if ((previousApacheHash != currentApacheHash || isFirstRun == true) && isSelfChildProcessOfCurrent(L"httpd.exe") == 2 && IsHttpdParentRunning(L"httpd.exe")) {
-            AppendEditInfo(L"WARNING: Apache is not started by this program.\r\n");
+        if ((previousApacheHash != currentApacheHash || isFirstRun == true) && isSelfChildProcessOfCurrent("httpd.exe") == 2 && IsHttpdParentRunning("httpd.exe")) {
+            AppendEditInfo("WARNING: Apache is not started by this program.\r\n");
         }
 
-        if ((previousNginxHash != currentNginxHash || isFirstRun == true) && isSelfChildProcessOfCurrent(L"nginx.exe") == 2 && IsHttpdParentRunning(L"nginx.exe")) {
-            AppendEditInfo(L"WARNING: Nginx is not started by this program.\r\n");
+        if ((previousNginxHash != currentNginxHash || isFirstRun == true) && isSelfChildProcessOfCurrent("nginx.exe") == 2 && IsHttpdParentRunning("nginx.exe")) {
+            AppendEditInfo("WARNING: Nginx is not started by this program.\r\n");
         }
 
         // While it's running, monitor to see if the process has been closed due to interference from other processes.
-        if (bPHPRunning && !ProcessIsRunning(L"php-cgi.exe")) {
-            AppendEditInfo(L"ERROR: php-cgi.exe Unexpected exit.\r\n");
+        if (bPHPRunning && !ProcessIsRunning("php-cgi.exe")) {
+            AppendEditInfo("ERROR: php-cgi.exe Unexpected exit.\r\n");
             bPHPRunning = false;
         }
 
-        if (bMysqlRunning && !ProcessIsRunning(L"mysqld.exe")) {
-            AppendEditInfo(L"ERROR: mysqld.exe Unexpected exit.\r\n");
+        if (bMysqlRunning && !ProcessIsRunning("mysqld.exe")) {
+            AppendEditInfo("ERROR: mysqld.exe Unexpected exit.\r\n");
             bMysqlRunning = false;
         }
 
-        if (bApacheRunning && !ProcessIsRunning(L"httpd.exe")) {
-            AppendEditInfo(L"ERROR: httpd.exe Unexpected exit.\r\n");
+        if (bApacheRunning && !ProcessIsRunning("httpd.exe")) {
+            AppendEditInfo("ERROR: httpd.exe Unexpected exit.\r\n");
             bApacheRunning = false;
         }
 
-        if (bNginxRunning && !ProcessIsRunning(L"nginx.exe")) {
-            AppendEditInfo(L"ERROR: nginx.exe Unexpected exit.\r\n");
+        if (bNginxRunning && !ProcessIsRunning("nginx.exe")) {
+            AppendEditInfo("ERROR: nginx.exe Unexpected exit.\r\n");
             bNginxRunning = false;
         }
 
@@ -569,7 +562,7 @@ DWORD StartDaemonService() {
 }
 
 DWORD CallDeleteProcess(ProcessDetail pProcessDetail) {
-    STARTUPINFO si;
+    STARTUPINFOA si;
     PROCESS_INFORMATION pi;
 
     ZeroMemory(&si, sizeof(si));
@@ -579,14 +572,14 @@ DWORD CallDeleteProcess(ProcessDetail pProcessDetail) {
     ZeroMemory(&pi, sizeof(pi));
 
     //ProcessDetail* pProcessDetail = (ProcessDetail*)lParam;
-    size_t wCmdStrLen = wcslen(pProcessDetail.cmd) + 1;
-    wchar_t* wCmdStr = (wchar_t*)malloc(wCmdStrLen * sizeof(wchar_t));
+    size_t wCmdStrLen = strlen(pProcessDetail.cmd) + 1;
+    char* wCmdStr = (char*)malloc(wCmdStrLen * sizeof(char));
     if (!wCmdStr) {
         return 0;
     }
-    wcscpy_s(wCmdStr, wCmdStrLen, pProcessDetail.cmd);
+    strcpy_s(wCmdStr, wCmdStrLen, pProcessDetail.cmd);
 
-    if (!CreateProcess(NULL, wCmdStr, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, pProcessDetail.dir, &si, &pi)) {
+    if (!CreateProcessA(NULL, wCmdStr, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, pProcessDetail.dir, &si, &pi)) {
         free(wCmdStr);
         return 0;
     }
@@ -596,15 +589,15 @@ DWORD CallDeleteProcess(ProcessDetail pProcessDetail) {
     DWORD exitCode;
     GetExitCodeProcess(pi.hProcess, &exitCode);
 
-    wchar_t publicMsgInfo[256] = { '\0' };
+    char publicMsgInfo[256] = { '\0' };
 
     if (exitCode != 0) {
         Log("code:%lu\r\n", exitCode);
-        swprintf_s(publicMsgInfo, sizeof(publicMsgInfo) / sizeof(wchar_t), L"INFO: %ls stop fail\r\n", pProcessDetail.serviceName);
+        sprintf_s(publicMsgInfo, sizeof(publicMsgInfo), "INFO: %s stop fail\r\n", pProcessDetail.serviceName);
         AppendEditInfo(publicMsgInfo);
     }
     else {
-        swprintf_s(publicMsgInfo, sizeof(publicMsgInfo) / sizeof(wchar_t), L"INFO: %ls stop\r\n", pProcessDetail.serviceName);
+        sprintf_s(publicMsgInfo, sizeof(publicMsgInfo), "INFO: %s stop\r\n", pProcessDetail.serviceName);
         AppendEditInfo(publicMsgInfo);
     }
 
@@ -625,11 +618,11 @@ void CloseDaemonService() {
 
     ProcessDetail pProcessDetail;
 
-    wchar_t cmdService[256] = { '\0' };
-    if (webDaemonServiceInstance.webServiceExe == L"nginx.exe") {
-        swprintf_s(cmdService, sizeof(cmdService) / sizeof(wchar_t), L"%ls -s quit", webDaemonServiceInstance.webServiceExePath);
+    char cmdService[256] = { '\0' };
+    if (webDaemonServiceInstance.webServiceExe == "nginx.exe") {
+        sprintf_s(cmdService, sizeof(cmdService), "%s -s quit", webDaemonServiceInstance.webServiceExePath);
 
-        pProcessDetail.serviceName = L"Nginx";
+        pProcessDetail.serviceName = "Nginx";
         pProcessDetail.processName = webDaemonServiceInstance.webServiceExe;
         pProcessDetail.cmd = cmdService;
         pProcessDetail.dir = webDaemonServiceInstance.webServiceExeDirectory;
@@ -639,29 +632,29 @@ void CloseDaemonService() {
     }
     else {
         // Terminating the Apache process requires administrator privileges.
-        swprintf_s(cmdService, sizeof(cmdService) / sizeof(wchar_t), L"taskkill.exe /F /IM %ls", webDaemonServiceInstance.webServiceExe);
-        pProcessDetail.serviceName = L"Apache";
+        sprintf_s(cmdService, sizeof(cmdService), "taskkill.exe /F /IM %s", webDaemonServiceInstance.webServiceExe);
+        pProcessDetail.serviceName = "Apache";
         pProcessDetail.processName = webDaemonServiceInstance.webServiceExe;
         pProcessDetail.cmd = cmdService;
         //pProcessDetail.dir = webDaemonServiceInstance.webServiceExeDirectory;
-        pProcessDetail.dir = L"C:/Windows/system/";
+        pProcessDetail.dir = "C:/Windows/system/";
         CallDeleteProcess(pProcessDetail);
 
         bApacheRunning = false;
     }
 
-    pProcessDetail.serviceName = L"Mysql";
-    pProcessDetail.processName = L"mysqld.exe";
-    pProcessDetail.cmd = L"taskkill.exe /F /IM mysqld.exe";
-    pProcessDetail.dir = L"C:/Windows/system/";
+    pProcessDetail.serviceName = "Mysql";
+    pProcessDetail.processName = "mysqld.exe";
+    pProcessDetail.cmd = "taskkill.exe /F /IM mysqld.exe";
+    pProcessDetail.dir = "C:/Windows/system/";
     CallDeleteProcess(pProcessDetail);
 
     bMysqlRunning = false;
 
-    pProcessDetail.serviceName = L"PHP";
-    pProcessDetail.processName = L"php-cgi.exe";
-    pProcessDetail.cmd = L"taskkill.exe /F /IM php-cgi.exe";
-    pProcessDetail.dir = L"C:/Windows/system/";
+    pProcessDetail.serviceName = "PHP";
+    pProcessDetail.processName = "php-cgi.exe";
+    pProcessDetail.cmd = "taskkill.exe /F /IM php-cgi.exe";
+    pProcessDetail.dir = "C:/Windows/system/";
     CallDeleteProcess(pProcessDetail);
 
     bPHPRunning = false;

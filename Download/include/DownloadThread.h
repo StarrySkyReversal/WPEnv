@@ -4,10 +4,10 @@
 #include "curl/curl.h"
 
 struct DownloadPart {
-    const wchar_t* version;
-    const wchar_t* url;
-    const wchar_t* filename;
-    const wchar_t* filepath;
+    const char* version;
+    const char* url;
+    const char* filename;
+    const char* filepath;
     FILE* file;
     CURL* easy_handle;
 

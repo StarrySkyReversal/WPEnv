@@ -5,55 +5,54 @@
 #include <jansson.h>
 #include "WindowLayout.h"
 #include "Common.h"
+#include<direct.h>
 
 char* ServiceSourceData;
 json_t* ServiceSourceDataJson;
 
-const wchar_t* GetLinkFromJSON(const wchar_t* version, const char* softwareName, json_t* jsonString, wchar_t* outputBuffer, int bufferSize) {
-    char wVersion[1024];
-    WToM(version, wVersion, sizeof(wVersion));
+int GetLinkFromJSON(const char* version, const char* softwareName, json_t* jsonString, char* outputBuffer, int bufferSize) {
+    if (jsonString == NULL || version == NULL || softwareName == NULL || outputBuffer == NULL) {
+        return -1;
+    }
 
-    if (json_object_get(jsonString, softwareName)) {
-        json_t* softwareArray = json_object_get(jsonString, softwareName);
-        size_t index;
-        json_t* item;
+    json_t* softwareArray = json_object_get(jsonString, softwareName);
+    if (!softwareArray || !json_is_array(softwareArray)) {
+        return -1;
+    }
 
-        json_array_foreach(softwareArray, index, item) {
-            const char* key;
-            json_t* value;
+    size_t index;
+    json_t* item;
+    json_array_foreach(softwareArray, index, item) {
+        const char* key;
+        json_t* value;
 
-            json_object_foreach(item, key, value) {
-                if (strcmp(wVersion, key) == 0) {
-                    const char* linkStr = json_string_value(value);
-
-                    MToW(linkStr, outputBuffer, bufferSize);
-
-                    return outputBuffer;
-                }
+        json_object_foreach(item, key, value) {
+            if (strcmp(version, key) == 0 && json_is_string(value)) {
+                const char* linkStr = json_string_value(value);
+                strncpy_s(outputBuffer, bufferSize, linkStr, bufferSize - 1);
+                outputBuffer[bufferSize - 1] = '\0'; // 确保字符串以 null 结尾
+                return 0;
             }
         }
     }
 
-    return L"";
+    return -1;
 }
 
 void SetSoftwareInfo(SoftwareInfo* software, HWND hList, const char* softwareType, json_t* json) {
-    LRESULT selectedIndex = SendMessage(hList, LB_GETCURSEL, 0, 0);
+    LRESULT selectedIndex = SendMessageA(hList, LB_GETCURSEL, 0, 0);
 
-    wchar_t version[256];
-    SendMessage(hList, LB_GETTEXT, selectedIndex, (LPARAM)version);
+    char version[256];
+    SendMessageA(hList, LB_GETTEXT, selectedIndex, (LPARAM)version);
 
     if (selectedIndex != -1) {
-        wchar_t linkBuffer[2048];
+        char linkBuffer[2048];
 
-        GetLinkFromJSON(version, softwareType, json, linkBuffer, sizeof(linkBuffer) / sizeof(wchar_t));
+        GetLinkFromJSON(version, softwareType, json, linkBuffer, sizeof(linkBuffer) / sizeof(char));
 
-        wchar_t wServiceType[32];
-        MToW(softwareType, wServiceType, _countof(wServiceType));
-
-        software->serviceType = _wcsdup(wServiceType);
-        software->version = _wcsdup(version);
-        software->link = _wcsdup(linkBuffer);
+        software->serviceType = _strdup(softwareType);
+        software->version = _strdup(version);
+        software->link = _strdup(linkBuffer);
         software->fileFullName = GetFileFullNameFromUrl(version, software->link);
     }
     else {
@@ -75,43 +74,25 @@ DWORD GetServiceVersionInfo(SoftwareGroupInfo* softwareGroupInfo) {
 
 // https://windows.php.net/downloads/releases/archives/
 void InitializeServiceSource() {
-    const wchar_t* jsonTxt = LR"(
+    const char* jsonTxt = R"(
 {
     "php": [
-        {"php-8.2.6-nts":"https://windows.php.net/downloads/releases/archives/php-8.2.6-nts-Win32-vs16-x64.zip"},
-        {"php-8.2.6":"https://windows.php.net/downloads/releases/archives/php-8.2.6-Win32-vs16-x64.zip"},
-        {"php-8.2.1-nts":"https://windows.php.net/downloads/releases/archives/php-8.2.1-nts-Win32-vs16-x64.zip"},
-        {"php-8.2.1":"https://windows.php.net/downloads/releases/archives/php-8.2.1-Win32-vs16-x64.zip"},
-        {"php-8.0.1-nts":"https://windows.php.net/downloads/releases/archives/php-8.0.1-nts-Win32-vs16-x64.zip"},
-        {"php-8.0.1":"https://windows.php.net/downloads/releases/archives/php-8.0.1-Win32-vs16-x64.zip"},
-        {"php-7.3.1-nts":"https://windows.php.net/downloads/releases/archives/php-7.3.1-nts-Win32-VC15-x64.zip"},
-        {"php-7.3.1":"https://windows.php.net/downloads/releases/archives/php-7.3.1-Win32-VC15-x64.zip"},
-        {"php-7.0.1-nts":"https://windows.php.net/downloads/releases/archives/php-7.0.1-nts-Win32-VC14-x64.zip"},
-        {"php-7.0.1":"https://windows.php.net/downloads/releases/archives/php-7.0.1-Win32-VC14-x64.zip"},
-        {"php-5.6.35-nts":"https://windows.php.net/downloads/releases/archives/php-5.6.35-nts-Win32-VC11-x64.zip"},
-        {"php-5.6.35":"https://windows.php.net/downloads/releases/archives/php-5.6.35-Win32-VC11-x64.zip"},
-        {"php-5.5.1-nts":"https://windows.php.net/downloads/releases/archives/php-5.5.1-nts-Win32-VC11-x64.zip"},
-        {"php-5.5.1":"https://windows.php.net/downloads/releases/archives/php-5.5.1-Win32-VC11-x64.zip"}
+        {"php-8.3.0":"https://windows.php.net/downloads/releases/archives/php-8.3.0-Win32-vs16-x64.zip"}
     ],
     "mysql": [
-        {"mysql-8.0.33":"https://downloads.mysql.com/archives/get/p/23/file/mysql-8.0.33-winx64.zip"},
-        {"mysql-5.7.42":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.42-winx64.zip"},
-        {"mysql-5.6.10":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.6.10-winx64.zip"},
-        {"mysql-5.5.8":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.5.8-winx64.zip"}
+        {"mysql-5.7.43":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.43-winx64.zip"}
     ],
     "apache": [
         {"httpd-2.4.58":"https://www.apachelounge.com/download/VS17/binaries/httpd-2.4.58-win64-VS17.zip"}
     ],
     "nginx": [
-        {"nginx-1.24.0":"http://nginx.org/download/nginx-1.24.0.zip"},
-        {"nginx-1.22.1":"http://nginx.org/download/nginx-1.22.1.zip"}
+        {"nginx-1.24.0":"http://nginx.org/download/nginx-1.24.0.zip"}
     ]
 }
 )";
 
-
     if (!DirectoryExists(DIRECTORY_CONFIG)) {
-        if (_wmkdir(DIRECTORY_CONFIG) != 0) {
+        if (_mkdir(DIRECTORY_CONFIG) != 0) {
             return;
         }
     }
@@ -123,7 +104,7 @@ void InitializeServiceSource() {
     FILE* file;
 
     // file exists
-    errno_t err = _wfopen_s(&file, FILE_CONFIG_SERVICE_SOURCE, L"w");
+    errno_t err = fopen_s(&file, FILE_CONFIG_SERVICE_SOURCE, "w");
     if (err != 0 || !file) {
         if (file) {
             fclose(file);
@@ -132,13 +113,13 @@ void InitializeServiceSource() {
         return;
     }
 
-    fwprintf(file, L"%ls\n", jsonTxt);
+    fprintf(file, "%s\n", jsonTxt);
     fclose(file);
 }
 
 void LoadServiceSourceData() {
     FILE* fp;
-    _wfopen_s(&fp, FILE_CONFIG_SERVICE_SOURCE, L"rb");
+    fopen_s(&fp, FILE_CONFIG_SERVICE_SOURCE, "rb");
     if (!fp) {
         return;
     }
@@ -209,13 +190,7 @@ void LoadServiceSourceDataToListBox() {
             json_t* subvalue;
 
             json_object_foreach(value, key, subvalue) {
-                int len = MultiByteToWideChar(CP_UTF8, 0, key, -1, NULL, 0);
-                wchar_t* wkey = new wchar_t[len];
-                MultiByteToWideChar(CP_UTF8, 0, key, -1, wkey, len);
-
-                SendMessage(hLists[i], LB_ADDSTRING, 0, (LPARAM)wkey);
-
-                delete[] wkey;
+                SendMessageA(hLists[i], LB_ADDSTRING, 0, (LPARAM)key);
             }
         }
     }

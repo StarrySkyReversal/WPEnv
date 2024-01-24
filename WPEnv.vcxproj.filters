@@ -123,13 +123,7 @@
     <ClInclude Include="ServerMode\include\ProcessOpt.h">
       <Filter>Header Files\ServerMode</Filter>
     </ClInclude>
-    <ClInclude Include="ServerMode\include\ServiceMode.h">
-      <Filter>Header Files\ServerMode</Filter>
-    </ClInclude>
     <ClInclude Include="Download\include\DownloadQueue.h">
-      <Filter>Header Files\Download</Filter>
-    </ClInclude>
-    <ClInclude Include="Download\include\CircularQueue.h">
       <Filter>Header Files\Download</Filter>
     </ClInclude>
     <ClInclude Include="File\include\FileModify.h">
@@ -143,6 +137,9 @@
     </ClInclude>
     <ClInclude Include="Download\include\StackOpt.h">
       <Filter>Header Files\Download</Filter>
+    </ClInclude>
+    <ClInclude Include="Config\include\SyncServiceConfig.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -206,9 +203,6 @@
     <ClCompile Include="ServerMode\src\ProcessOpt.cpp">
       <Filter>Source Files\ServerMode</Filter>
     </ClCompile>
-    <ClCompile Include="ServerMode\src\ServiceMode.cpp">
-      <Filter>Source Files\ServerMode</Filter>
-    </ClCompile>
     <ClCompile Include="Config\src\ServiceUse.cpp">
       <Filter>Source Files\Config</Filter>
     </ClCompile>
@@ -219,9 +213,6 @@
       <Filter>Source Files\Controls</Filter>
     </ClCompile>
     <ClCompile Include="Download\src\DownloadQueue.cpp">
-      <Filter>Source Files\Download</Filter>
-    </ClCompile>
-    <ClCompile Include="Download\src\CircularQueue.cpp">
       <Filter>Source Files\Download</Filter>
     </ClCompile>
     <ClCompile Include="File\src\FileModify.cpp">
@@ -235,6 +226,9 @@
     </ClCompile>
     <ClCompile Include="Download\src\StackOpt.cpp">
       <Filter>Source Files\Download</Filter>
+    </ClCompile>
+    <ClCompile Include="Config\src\SyncServiceConfig.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -257,5 +251,26 @@
     <None Include="README.md" />
     <None Include="LICENSE.md" />
     <None Include=".gitignore" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Repository\php\php-8.3.0.txt" />
+    <Text Include="Repository\php\7.x.nts.txt" />
+    <Text Include="Repository\php\5.x.ts.txt" />
+    <Text Include="Repository\php\5.x.nts.txt" />
+    <Text Include="Repository\nginx\1.2.x.txt" />
+    <Text Include="Repository\mysql\5.6.x.txt" />
+    <Text Include="Repository\mysql\5.5.x.txt" />
+    <Text Include="Repository\mysql\5.7.43.txt" />
+    <Text Include="Repository\apache\httpd-2.4.58.txt" />
+    <Text Include="Repository\apache\2.0.x.txt" />
+    <Text Include="Repository\apache\1.3.x.txt" />
+    <Text Include="Repository\apache\2.2.x.txt" />
+    <Text Include="Repository\nginx\0.7.x.txt" />
+    <Text Include="Repository\nginx\1.0.x.txt" />
+    <Text Include="Repository\nginx\1.6.x.txt" />
+    <Text Include="Repository\nginx\1.8.x.txt" />
+    <Text Include="Repository\nginx\nginx-1.24.0.txt" />
+    <Text Include="Repository\apache\vhosts.txt" />
+    <Text Include="Repository\nginx\vhosts.txt" />
   </ItemGroup>
 </Project>

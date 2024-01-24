@@ -34,9 +34,9 @@ void HandleTrayMessage(HWND hwnd, LPARAM lParam) {
         case WM_RBUTTONUP:
         {
             HMENU hMenu = CreatePopupMenu();
-            AppendMenu(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_CONFIG, L"Config Directory");
-            AppendMenu(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_DOWNLOAD, L"Downloads Directory");
-            AppendMenu(hMenu, MF_STRING, ID_MENU_EXIT, L"Exit");
+            AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_CONFIG, "Config Directory");
+            AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_DOWNLOAD, "Downloads Directory");
+            AppendMenuA(hMenu, MF_STRING, ID_MENU_EXIT, "Exit");
 
             POINT pt;
             GetCursorPos(&pt);
@@ -45,13 +45,13 @@ void HandleTrayMessage(HWND hwnd, LPARAM lParam) {
 
             switch (selectedId) {
             case ID_MENU_OPEN_FOLDER_CONFIG:
-                ShellExecute(hwnd, L"open", DIRECTORY_CONFIG, NULL, NULL, SW_SHOWDEFAULT);
+                ShellExecuteA(hwnd, "open", DIRECTORY_CONFIG, NULL, NULL, SW_SHOWDEFAULT);
                 break;
             case ID_MENU_OPEN_FOLDER_DOWNLOAD:
-                ShellExecute(hwnd, L"open", DIRECTORY_DOWNLOAD, NULL, NULL, SW_SHOWDEFAULT);
+                ShellExecuteA(hwnd, "open", DIRECTORY_DOWNLOAD, NULL, NULL, SW_SHOWDEFAULT);
                 break;
             case ID_MENU_OPEN_FOLDER_SERVICE:
-                ShellExecute(hwnd, L"open", DIRECTORY_SERVICE, NULL, NULL, SW_SHOWDEFAULT);
+                ShellExecuteA(hwnd, "open", DIRECTORY_SERVICE, NULL, NULL, SW_SHOWDEFAULT);
                 break;
             case ID_MENU_EXIT:
                 PostQuitMessage(0);

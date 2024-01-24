@@ -1,10 +1,10 @@
 #pragma once
 
 typedef struct {
-    const wchar_t* version;
-    const wchar_t* link;
-    const wchar_t* serviceType;
-    const wchar_t* fileFullName;
+    const char* version;
+    const char* link;
+    const char* serviceType;
+    const char* fileFullName;
 } SoftwareInfo;
 
 typedef struct {

@@ -10,7 +10,6 @@
 #include "Compression.h"
 #include "Common.h"
 #include "DownloadQueue.h"
-#include "CircularQueue.h"
 #include "FileModify.h"
 #include "FileFindOpt.h"
 #include "ServiceUse.h"
@@ -52,37 +51,37 @@ void freeDownloadPart(DownloadPart* part) {
 }
 
 DownloadPart* GenerateDownloadPartModel(
-    const wchar_t* version,
-    const wchar_t* link,
+    const char* version,
+    const char* link,
     ULONGLONG start,
     ULONGLONG end,
-    const wchar_t* fileName = L"\0",
-    const wchar_t* filePath = L"\0",
+    const char* fileName = "\0",
+    const char* filePath = "\0",
     ULONGLONG readBytes = 0
 ) {
 
     DownloadPart* part = (DownloadPart*)malloc(sizeof(DownloadPart));
 
     if (fileName[0] == L'\0') {
-        wchar_t TempFilename[256] = { '\0' };
-        swprintf_s(TempFilename, sizeof(TempFilename) / sizeof(wchar_t), L"%ls_part_%llu_%llu", version, start, end);
-        part->filename = _wcsdup(TempFilename);
+        char TempFilename[256] = { '\0' };
+        sprintf_s(TempFilename, sizeof(TempFilename), "%s_part_%llu_%llu", version, start, end);
+        part->filename = _strdup(TempFilename);
     }
     else {
-        part->filename = _wcsdup(fileName);
+        part->filename = _strdup(fileName);
     }
 
     if (filePath[0] == L'\0') {
-        wchar_t TempFilePath[256] = { '\0' };
-        swprintf_s(TempFilePath, sizeof(TempFilePath) / sizeof(wchar_t), L"%ls/%ls", DIRECTORY_DOWNLOAD, part->filename);
-        part->filepath = _wcsdup(TempFilePath);
+        char TempFilePath[256] = { '\0' };
+        sprintf_s(TempFilePath, sizeof(TempFilePath), "%s/%s", DIRECTORY_DOWNLOAD, part->filename);
+        part->filepath = _strdup(TempFilePath);
     }
     else {
-        part->filepath = _wcsdup(filePath);
+        part->filepath = _strdup(filePath);
     }
 
-    part->version = _wcsdup(version);
-    part->url = _wcsdup(link);
+    part->version = _strdup(version);
+    part->url = _strdup(link);
     //part->indexCategory = GetCircularVal(&circularQueueArray);
     //part->indexCategory = 0;
     //part->retryCount = 0;
@@ -214,17 +213,17 @@ DWORD WINAPI DaemonDownloadThread(LPVOID param) {
 DWORD WINAPI ProgressThread(LPVOID param) {
     SoftwareInfo* pSoftwareInfo = (SoftwareInfo*)param;
 
-    wchar_t progressIngMsg[512];
-    wchar_t progressFinishMsg[512];
+    char progressIngMsg[512];
+    char progressFinishMsg[512];
 
     // init
     SetProgressBarPosition(0);
-    UpdateStaticLabelInfo(L"");
+    UpdateStaticLabelInfo("");
 
     int currentProgress = 0;
     unsigned long long prevDownloadedTotalSize = 0;
     double nSpeed = 0;
-    wchar_t speedInfo[16] = L"\0";
+    char speedInfo[16] = "\0";
     while (currentProgress < 100) {
         EnterCriticalSection(&progressCriticalSection);
         if (downlodedTotalSize > 0) {
@@ -236,13 +235,13 @@ DWORD WINAPI ProgressThread(LPVOID param) {
             nSpeed = (downlodedTotalSize - prevDownloadedTotalSize) / 1024.0;
             if (nSpeed >= 1024.0) {
                 nSpeed = nSpeed / 1024.0;
-                swprintf_s(speedInfo, _countof(speedInfo), L" %.2fMB/s", nSpeed);
+                sprintf_s(speedInfo, sizeof(speedInfo), " %.2fMB/s", nSpeed);
             }
             else {
-                swprintf_s(speedInfo, _countof(speedInfo), L" %dKB/s", (int)nSpeed);
+                sprintf_s(speedInfo, sizeof(speedInfo), " %dKB/s", (int)nSpeed);
             }
 
-            swprintf_s(progressIngMsg, sizeof(progressIngMsg) / sizeof(wchar_t), L"%ls Downloading: %d%% %ls",
+            sprintf_s(progressIngMsg, sizeof(progressIngMsg), "%s Downloading: %d%% %s",
                 pSoftwareInfo->fileFullName, currentProgress, speedInfo);
             UpdateStaticLabelInfo(progressIngMsg);
         }
@@ -254,9 +253,9 @@ DWORD WINAPI ProgressThread(LPVOID param) {
     }
 
     SetProgressBarPosition(0);
-    UpdateStaticLabelInfo(L"");
+    UpdateStaticLabelInfo("");
 
-    swprintf_s(progressFinishMsg, sizeof(progressFinishMsg) / sizeof(wchar_t), L"INFO: %ls Download: %i%%\r\n", pSoftwareInfo->fileFullName, currentProgress);
+    sprintf_s(progressFinishMsg, sizeof(progressFinishMsg), "INFO: %s Download: %i%%\r\n", pSoftwareInfo->fileFullName, currentProgress);
     AppendEditInfo(progressFinishMsg);
 
     Log("ProgressBar finish\r\n");
@@ -264,23 +263,23 @@ DWORD WINAPI ProgressThread(LPVOID param) {
 }
 
 int compareFunc(const void* a, const void* b) {
-    const wchar_t* strA = *(const wchar_t**)a;
-    const wchar_t* strB = *(const wchar_t**)b;
+    const char* strA = *(const char**)a;
+    const char* strB = *(const char**)b;
 
-    const wchar_t* partPosA = wcsstr(strA, L"part_");
-    while (wcsstr(partPosA + 5, L"part_")) {
-        partPosA = wcsstr(partPosA + 5, L"part_");
+    const char* partPosA = strstr(strA, "part_");
+    while (strstr(partPosA + 5, "part_")) {
+        partPosA = strstr(partPosA + 5, "part_");
     }
 
-    const wchar_t* partPosB = wcsstr(strB, L"part_");
-    while (wcsstr(partPosB + 5, L"part_")) {
-        partPosB = wcsstr(partPosB + 5, L"part_");
+    const char* partPosB = strstr(strB, "part_");
+    while (strstr(partPosB + 5, "part_")) {
+        partPosB = strstr(partPosB + 5, "part_");
     }
 
-    if (!partPosA || !partPosB) return wcscmp(strA, strB);
+    if (!partPosA || !partPosB) return strcmp(strA, strB);
 
-    unsigned long long numA = wcstoull(partPosA + 5, NULL, 10);
-    unsigned long long numB = wcstoull(partPosB + 5, NULL, 10);
+    unsigned long long numA = strtoull(partPosA + 5, NULL, 10);
+    unsigned long long numB = strtoull(partPosB + 5, NULL, 10);
 
     if (numA < numB) return -1;
     if (numA > numB) return 1;
@@ -302,53 +301,54 @@ void freeGlobalParts(DownloadPart** parts, int size) {
 
 bool UnzipFile(SoftwareInfo* pSoftwareInfo) {
 
-    wchar_t unzipZipFilePath[512] = { '\0' };
-    wchar_t unzipTempMsg[512] = { '\0' };
+    char unzipZipFilePath[512] = { '\0' };
+    char unzipTempMsg[512] = { '\0' };
     int unzipResult = 0;
 
-    swprintf_s(unzipTempMsg, sizeof(unzipTempMsg) / sizeof(wchar_t), L"INFO: Unpacking %ls ...\r\n", pSoftwareInfo->fileFullName);
+    sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "INFO: Unpacking %s ...\r\n", pSoftwareInfo->fileFullName);
     AppendEditInfo(unzipTempMsg);
 
-    swprintf_s(unzipZipFilePath, sizeof(unzipZipFilePath) / sizeof(wchar_t), L"%ls/%ls", DIRECTORY_DOWNLOAD, pSoftwareInfo->fileFullName);
+    sprintf_s(unzipZipFilePath, sizeof(unzipZipFilePath), "%s/%s", DIRECTORY_DOWNLOAD, pSoftwareInfo->fileFullName);
 
     unzipResult = extract_zip_file(unzipZipFilePath, pSoftwareInfo->serviceType, pSoftwareInfo->version);
     if (unzipResult == -1) {
-        Log(L"Failed to extract the file %ls, please try downloading again.", pSoftwareInfo->version);
+        Log(L"Failed to extract the file %s, please try downloading again.", pSoftwareInfo->version);
 
-        DeleteFile(unzipZipFilePath);
+        DeleteFileA(unzipZipFilePath);
 
         return false;
     }
     else if (unzipResult == -3) {
-        swprintf_s(unzipTempMsg, sizeof(unzipTempMsg) / sizeof(wchar_t),
-            L"The corresponding version folder already exists: %ls/%ls/%ls\r\n", DIRECTORY_SERVICE, pSoftwareInfo->serviceType, pSoftwareInfo->version);
+        sprintf_s(unzipTempMsg, sizeof(unzipTempMsg),
+            "The corresponding version folder already exists: %s/%s/%s\r\n", DIRECTORY_SERVICE, pSoftwareInfo->serviceType, pSoftwareInfo->version);
         AppendEditInfo(unzipTempMsg);
 
         return false;
     }
     else if (unzipResult == 0) {
-        swprintf_s(unzipTempMsg, sizeof(unzipTempMsg) / sizeof(wchar_t), L"INFO: Unpacking %ls complete\r\n", pSoftwareInfo->fileFullName);
+        sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "INFO: Unpacking %s complete\r\n", pSoftwareInfo->fileFullName);
         AppendEditInfo(unzipTempMsg);
 
     }
     else {
-        LogAndMsgBox(L"Unknown unzip error.\r\n");
-        DeleteFile(unzipZipFilePath);
+        LogAndMsgBox("Unknown unzip error.\r\n");
+        DeleteFileA(unzipZipFilePath);
 
         return false;
     }
 
-    if (wcscmp(pSoftwareInfo->serviceType, L"apache") == 0) {
-        InitializeApacheConfigFile(*pSoftwareInfo);
-    }
+    //if (wcscmp(pSoftwareInfo->serviceType, L"apache") == 0) {
 
-    if (wcscmp(pSoftwareInfo->serviceType, L"php") == 0) {
-        syncPHPConfigFile(*pSoftwareInfo);
-    }
+    //    //InitializeApacheConfigFile(*pSoftwareInfo);
+    //}
 
-    if (wcscmp(pSoftwareInfo->serviceType, L"nginx") == 0) {
-        InitializeNginxConfigFile(*pSoftwareInfo);
-    }
+    //if (wcscmp(pSoftwareInfo->serviceType, L"php") == 0) {
+    //    //syncPHPConfigFile(*pSoftwareInfo);
+    //}
+
+    //if (wcscmp(pSoftwareInfo->serviceType, L"nginx") == 0) {
+    //    //InitializeNginxConfigFile(*pSoftwareInfo);
+    //}
 
     return true;
 }
@@ -387,7 +387,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
     numLockFlowMax = 16;
 
     if (!DirectoryExists(DIRECTORY_DOWNLOAD)) {
-        CreateDirectory(DIRECTORY_DOWNLOAD, NULL);
+        CreateDirectoryA(DIRECTORY_DOWNLOAD, NULL);
     }
 
     // SSL library multithreading
@@ -396,8 +396,8 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
     // Starting download soon
 
     //AppendEditInfo(L"Starting download soon");
-    wchar_t infoTip[256] = L"\0";
-    swprintf_s(infoTip, sizeof(infoTip) / sizeof(wchar_t), L"INFO: Initiating download of %ls\r\n", pSoftwareInfo->version);
+    char infoTip[256] = "\0";
+    sprintf_s(infoTip, sizeof(infoTip), "INFO: Initiating download of %s\r\n", pSoftwareInfo->version);
     AppendEditInfo(infoTip);
     curl_global_init(CURL_GLOBAL_ALL);
     totalSize = CurlGetRemoteFileSize(pSoftwareInfo->link);
@@ -457,8 +457,8 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
         }
     }
 
-    wchar_t startDownloadMsg[256];
-    swprintf_s(startDownloadMsg, _countof(startDownloadMsg), L"INFO: Target link %ls\r\n", pSoftwareInfo->link);
+    char startDownloadMsg[256];
+    sprintf_s(startDownloadMsg, sizeof(startDownloadMsg), "INFO: Target link %s\r\n", pSoftwareInfo->link);
     AppendEditInfo(startDownloadMsg);
 
     curl_global_init(CURL_GLOBAL_ALL);
@@ -551,7 +551,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
 
     curl_global_cleanup();
 
-    const wchar_t** filepathPtrs = new const wchar_t* [totalPartSize]();
+    const char** filepathPtrs = new const char* [totalPartSize]();
 
     // Check the integrity of the file block.
     bool checkVerify = true;
@@ -561,7 +561,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
                 globalPartGroup[i]->readBytes, globalPartGroup[i]->totalBytesLength);
 
             for (int j = 0; j < totalPartSize; j++) {
-                DeleteFile(globalPartGroup[i]->filepath);
+                DeleteFileA(globalPartGroup[i]->filepath);
             }
 
             checkVerify = false;
@@ -580,15 +580,15 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
         filepathPtrs[i] = globalPartGroup[i]->filepath;
     }
 
-    qsort(filepathPtrs, totalPartSize, sizeof(wchar_t*), compareFunc);
+    qsort(filepathPtrs, totalPartSize, sizeof(char*), compareFunc);
     for (int i = 0; i < totalPartSize; i++) {
         Log("filename:%ls;\r\n",
             filepathPtrs[i]);
     }
 
     if (checkVerify) {
-        wchar_t fileFullNamePath[256];
-        swprintf_s(fileFullNamePath, sizeof(fileFullNamePath) / sizeof(wchar_t), L"%ls/%ls", DIRECTORY_DOWNLOAD, pSoftwareInfo->fileFullName);
+        char fileFullNamePath[256];
+        sprintf_s(fileFullNamePath, sizeof(fileFullNamePath), "%s/%s", DIRECTORY_DOWNLOAD, pSoftwareInfo->fileFullName);
 
         MergeFiles(fileFullNamePath, filepathPtrs, totalPartSize);
     }
