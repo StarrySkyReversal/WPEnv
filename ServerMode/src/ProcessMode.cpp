@@ -436,22 +436,14 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
     ClearRichEdit();
 
     ///////////////////////PHP/////////////////////////
-    if (phpProcess(serviceUse) != 0) {
-        return 0;
-    }
+    phpProcess(serviceUse);
     ///////////////////MYSQL1//////////////////////////
     bool bMysqlInit = false;
-    if (mysqlServiceProcess(serviceUse, &bMysqlInit) != 0) {
-        return 0;
-    }
+    mysqlServiceProcess(serviceUse, &bMysqlInit);
     ///////////////////MYSQL2//////////////////////////
-    if (mysqlClientProcess(serviceUse, bMysqlInit) != 0) {
-        return 0;
-    }
+    mysqlClientProcess(serviceUse, bMysqlInit);
     /////////////////WebService////////////////////////
-    if (webServiceProcess(serviceUse) != 0) {
-        return 0;
-    }
+    webServiceProcess(serviceUse);
 
     webDaemonServiceInstance.bRun = true;
 
