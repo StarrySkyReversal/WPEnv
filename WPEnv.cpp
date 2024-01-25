@@ -165,8 +165,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    int width = rc.right - rc.left;
    int height = rc.bottom - rc.top;
 
+   int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+   int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+   int startX = (screenWidth - width) / 2;
+   int startY = (screenHeight - height) / 2;
+
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, width, height, nullptr, nullptr, hInstance, nullptr);
+       startX, startY, width, height, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {

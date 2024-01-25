@@ -251,6 +251,8 @@
     <None Include="README.md" />
     <None Include="LICENSE.md" />
     <None Include=".gitignore" />
+    <None Include="Repository\packages\httpd-2.4.58.zip" />
+    <None Include="Repository\packages\nginx-1.24.0.zip" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Repository\php\php-8.3.0.txt" />
