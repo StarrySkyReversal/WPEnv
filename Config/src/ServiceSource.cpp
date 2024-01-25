@@ -50,14 +50,25 @@ void SetSoftwareInfo(SoftwareInfo* software, HWND hList, const char* softwareTyp
 
         GetLinkFromJSON(version, softwareType, json, linkBuffer, sizeof(linkBuffer) / sizeof(char));
 
+        char* versionCopy;
+        char* versionNumber;
+        char* context = NULL;
+
+        versionCopy = _strdup(version);
+        versionNumber = strtok_s(versionCopy, "_", &context);
+
         software->serviceType = _strdup(softwareType);
         software->version = _strdup(version);
+        software->versionNumber = _strdup(versionNumber);
         software->link = _strdup(linkBuffer);
         software->fileFullName = GetFileFullNameFromUrl(version, software->link);
+
+        free(versionCopy);
     }
     else {
         software->serviceType = NULL;
         software->version = NULL;
+        software->versionNumber = NULL;
         software->link = NULL;
         software->fileFullName = NULL;
     }
@@ -77,7 +88,55 @@ void InitializeServiceSource() {
     const char* jsonTxt = R"(
 {
     "php": [
-        {"php-8.3.0":"https://windows.php.net/downloads/releases/archives/php-8.3.0-Win32-vs16-x64.zip"}
+        {"php-8.3.0_nts-vs16-x64":"https://windows.php.net/downloads/releases/archives/php-8.3.0-nts-Win32-vs16-x64.zip"},
+        {"php-8.3.0_nts-vs16-x86":"https://windows.php.net/downloads/releases/archives/php-8.3.0-nts-Win32-vs16-x86.zip"},
+        {"php-8.3.0_ts-vs16-x64":"https://windows.php.net/downloads/releases/archives/php-8.3.0-Win32-vs16-x64.zip"},
+        {"php-8.3.0_ts-vs16-x86":"https://windows.php.net/downloads/releases/archives/php-8.3.0-Win32-vs16-x86.zip"},
+
+        {"php-8.2.0_nts-vs16-x64":"https://windows.php.net/downloads/releases/archives/php-8.2.0-nts-Win32-vs16-x64.zip"},
+        {"php-8.2.0_nts-vs16-x86":"https://windows.php.net/downloads/releases/archives/php-8.2.0-nts-Win32-vs16-x86.zip"},
+        {"php-8.2.0_ts-vs16-x64":"https://windows.php.net/downloads/releases/archives/php-8.2.0-Win32-vs16-x64.zip"},
+        {"php-8.2.0_ts-vs16-x86":"https://windows.php.net/downloads/releases/archives/php-8.2.0-Win32-vs16-x86.zip"},
+
+        {"php-8.1.0_nts-vs16-x64":"https://windows.php.net/downloads/releases/archives/php-8.1.0-nts-Win32-vs16-x64.zip"},
+        {"php-8.1.0_nts-vs16-x86":"https://windows.php.net/downloads/releases/archives/php-8.1.0-nts-Win32-vs16-x86.zip"},
+        {"php-8.1.0_ts-vs16-x64":"https://windows.php.net/downloads/releases/archives/php-8.1.0-Win32-vs16-x64.zip"},
+        {"php-8.1.0_ts-vs16-x86":"https://windows.php.net/downloads/releases/archives/php-8.1.0-Win32-vs16-x86.zip"},
+
+        {"php-8.0.0_nts-vs16-x64":"https://windows.php.net/downloads/releases/archives/php-8.0.0-nts-Win32-vs16-x64.zip"},
+        {"php-8.0.0_nts-vs16-x86":"https://windows.php.net/downloads/releases/archives/php-8.0.0-nts-Win32-vs16-x86.zip"},
+        {"php-8.0.0_ts-vs16-x64":"https://windows.php.net/downloads/releases/archives/php-8.0.0-Win32-vs16-x64.zip"},
+        {"php-8.0.0_ts-vs16-x86":"https://windows.php.net/downloads/releases/archives/php-8.0.0-Win32-vs16-x86.zip"},
+
+        {"php-7.3.0_nts-vc15-x64":"https://windows.php.net/downloads/releases/archives/php-7.3.0-nts-Win32-VC15-x64.zip"},
+        {"php-7.3.0_nts-vc15-x86":"https://windows.php.net/downloads/releases/archives/php-7.3.0-nts-Win32-VC15-x86.zip"},
+        {"php-7.3.0_ts-vc15-x64":"https://windows.php.net/downloads/releases/archives/php-7.3.0-Win32-VC15-x64.zip"},
+        {"php-7.3.0_ts-vc15-x86":"https://windows.php.net/downloads/releases/archives/php-7.3.0-Win32-VC15-x86.zip"},
+
+        {"php-7.2.0_nts-vc15-x64":"https://windows.php.net/downloads/releases/archives/php-7.2.0-nts-Win32-VC15-x64.zip"},
+        {"php-7.2.0_nts-vc15-x86":"https://windows.php.net/downloads/releases/archives/php-7.2.0-nts-Win32-VC15-x86.zip"},
+        {"php-7.2.0_ts-vc15-x64":"https://windows.php.net/downloads/releases/archives/php-7.2.0-Win32-VC15-x64.zip"},
+        {"php-7.2.0_ts-vc15-x86":"https://windows.php.net/downloads/releases/archives/php-7.2.0-Win32-VC15-x86.zip"},
+
+        {"php-7.1.0_nts-vc14-x64":"https://windows.php.net/downloads/releases/archives/php-7.1.0-nts-Win32-VC14-x64.zip"},
+        {"php-7.1.0_nts-vc14-x86":"https://windows.php.net/downloads/releases/archives/php-7.1.0-nts-Win32-VC14-x86.zip"},
+        {"php-7.1.0_ts-vc14-x64":"https://windows.php.net/downloads/releases/archives/php-7.1.0-Win32-VC14-x64.zip"},
+        {"php-7.1.0_ts-vc14-x86":"https://windows.php.net/downloads/releases/archives/php-7.1.0-Win32-VC14-x86.zip"},
+
+        {"php-7.0.0_nts-vc14-x64":"https://windows.php.net/downloads/releases/archives/php-7.0.0-nts-Win32-VC14-x64.zip"},
+        {"php-7.0.0_nts-vc14-x86":"https://windows.php.net/downloads/releases/archives/php-7.0.0-nts-Win32-VC14-x86.zip"},
+        {"php-7.0.0_ts-vc14-x64":"https://windows.php.net/downloads/releases/archives/php-7.0.0-Win32-VC14-x64.zip"},
+        {"php-7.0.0_ts-vc14-x86":"https://windows.php.net/downloads/releases/archives/php-7.0.0-Win32-VC14-x86.zip"},
+
+        {"php-5.6.0_nts-vc11-x64":"https://windows.php.net/downloads/releases/archives/php-5.6.0-nts-Win32-VC11-x64.zip"},
+        {"php-5.6.0_nts-vc11-x86":"https://windows.php.net/downloads/releases/archives/php-5.6.0-nts-Win32-VC11-x86.zip"},
+        {"php-5.6.0_ts-vc11-x64":"https://windows.php.net/downloads/releases/archives/php-5.6.0-Win32-VC11-x64.zip"},
+        {"php-5.6.0_ts-vc11-x86":"https://windows.php.net/downloads/releases/archives/php-5.6.0-Win32-VC11-x86.zip"},
+
+        {"php-5.5.0_nts-vc11-x64":"https://windows.php.net/downloads/releases/archives/php-5.5.0-nts-Win32-VC11-x64.zip"},
+        {"php-5.5.0_nts-vc11-x86":"https://windows.php.net/downloads/releases/archives/php-5.5.0-nts-Win32-VC11-x86.zip"},
+        {"php-5.5.0_ts-vc11-x64":"https://windows.php.net/downloads/releases/archives/php-5.5.0-Win32-VC11-x64.zip"},
+        {"php-5.5.0_ts-vc11-x86":"https://windows.php.net/downloads/releases/archives/php-5.5.0-Win32-VC11-x86.zip"}
     ],
     "mysql": [
         {"mysql-5.7.43":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.43-winx64.zip"}

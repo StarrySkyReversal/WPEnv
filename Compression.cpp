@@ -84,6 +84,8 @@ int extract_zip_file(const char* zipFilename, const char* serviceType, const cha
     char tempVersionDirectory[512];
     sprintf_s(tempVersionDirectory, "%s/temp_%s", serveiceTypeDirectory, version);
     if (DirectoryExists(tempVersionDirectory)) {
+        //if (!RemoveDirectoryA(tempVersionDirectory)) {
+        //}
         LogAndMsgBox("Temporary directory exists, please manual delete this directory %s\r\n", tempVersionDirectory);
         return -3;
     }
@@ -97,7 +99,7 @@ int extract_zip_file(const char* zipFilename, const char* serviceType, const cha
 
     unzFile zfile = unzOpen(zipFilename);
     if (!zfile) {
-        LogAndMsgBox("Cannot open ZIP file %s\r\n", zipFilename);
+        LogAndMsgBox("Cannot open ZIP file %s, please try downloading again.\r\n", zipFilename);
         return -1;
     }
 
@@ -107,7 +109,7 @@ int extract_zip_file(const char* zipFilename, const char* serviceType, const cha
     if (DirectoryExists(versionDirectory)) {
         unzClose(zfile);
 
-        LogAndMsgBox("The corresponding version folder already exists: %s/%s/%s\r\n", DIRECTORY_SERVICE, serviceType, version);
+        //LogAndMsgBox("The corresponding version folder already exists: %s/%s/%s\r\n", DIRECTORY_SERVICE, serviceType, version);
         return -3;
     }
 

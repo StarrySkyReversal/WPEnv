@@ -12,3 +12,5 @@ void AddListViewItem(HWND hWnd, int itemIndex, int ColumnIndex, const char* text
 int GetListViewSelectedIndex(HWND hWnd);
 bool DeleteListViewItem(HWND hWnd, int selectedIndex);
 void GetListViewSelectedText(HWND hWnd, int itemIndex, int columnIndex, char* buffer, DWORD bufferSize);
+void UpdateListViewSortNumber();
+void SetListViewFocus();

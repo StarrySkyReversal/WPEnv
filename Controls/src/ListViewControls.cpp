@@ -283,6 +283,25 @@ void AddListViewItem(HWND hWnd, int itemIndex, int ColumnIndex, const char* text
     //delete[] wText;
 }
 
+void SetListViewFocus() {
+    int itemCount = ListView_GetItemCount(hListConfig);
+    for (int i = 0; i < itemCount; i++) {
+        ListView_SetItemState(hListConfig, i, 0, LVIS_SELECTED);
+    }
+
+    ListView_SetItemState(hListConfig, 0, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+    ListView_EnsureVisible(hListConfig, 0, FALSE);
+}
+
+void UpdateListViewSortNumber() {
+    int countLine = GetListViewCount(hListConfig);
+    for (int i = countLine; i > 0; i--) {
+        wchar_t newText[256];
+        swprintf_s(newText, _countof(newText), L"%d", i);
+        ListView_SetItemText(hListConfig, countLine - i, 0, newText);
+    }
+}
+
 int GetListViewSelectedIndex(HWND hWnd) {
     return ListView_GetNextItem(hWnd, -1, LVNI_SELECTED);
 }

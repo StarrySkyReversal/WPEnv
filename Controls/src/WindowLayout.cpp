@@ -1,7 +1,7 @@
 #include "framework.h"
 #include "WindowLayout.h"
 
-int listBoxWidth = 120;
+int listBoxWidth = 160;
 int listBoxHeight = 160;
 int spacing = 10;
 

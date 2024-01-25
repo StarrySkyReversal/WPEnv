@@ -2,6 +2,7 @@
 
 typedef struct {
     const char* version;
+    const char* versionNumber;
     const char* link;
     const char* serviceType;
     const char* fileFullName;

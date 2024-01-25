@@ -2,4 +2,4 @@
 
 #include "ServiceSource.h"
 
-void sync(SoftwareGroupInfo softwareGroupInfo);
+DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo);

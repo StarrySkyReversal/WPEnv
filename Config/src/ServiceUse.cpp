@@ -192,15 +192,25 @@ bool AddNewConfig(SoftwareGroupInfo softwareGroupInfo) {
     AddListViewItem(hListConfig, itemIndex, 2, softwareGroupInfo.mysql.version);
     AddListViewItem(hListConfig, itemIndex, 3, service);
 
+    SetListViewFocus();
+
     return true;
 }
 
 void RemoveListViewSelectedItem() {
     int selectedIndex = GetListViewSelectedIndex(hListConfig);
-
-    if (RemoveServiceUseItem(FILE_CONFIG_SERVICE_USE, selectedIndex)) {
-        if (!DeleteListViewItem(hListConfig, selectedIndex)) {
-            LogAndMsgBox("Delete fail\r\n");
+    int serviceUseFileIndex = GetListViewCount(hListConfig) - selectedIndex -1;
+    
+    if (selectedIndex >= 0) {
+        if (RemoveServiceUseItem(FILE_CONFIG_SERVICE_USE, serviceUseFileIndex)) {
+            if (!DeleteListViewItem(hListConfig, selectedIndex)) {
+                LogAndMsgBox("Delete fail\r\n");
+            }
+            else {
+                UpdateListViewSortNumber();
+                // Update list sort Number
+                //ListView_Set
+            }
         }
     }
 }

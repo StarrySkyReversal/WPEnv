@@ -10,22 +10,64 @@
 #include "FileFindOpt.h"
 #include  "ServiceUse.h"
 
-void phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* result, size_t bufferSize) {
-	if (strcmp(phpVersion, "php-8.3.0") == 0) {
-		sprintf_s(result, bufferSize, "LoadModule php_module \"%s/php8apache2_4.dll\"", serviceVersionDir);
+DWORD phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* result, size_t bufferSize) {
+	//char tempPHPVersion[256];
+	//strncpy_s(tempPHPVersion, sizeof(tempPHPVersion), phpVersion, strlen(phpVersion));
+	//tempPHPVersion[sizeof(tempPHPVersion) - 1] = '\0';
+
+	//char* versionStr;
+	//char* context = NULL;
+	//versionStr = strtok_s(tempPHPVersion, "_", &context);
+	char dllFilePath[512];
+
+	if (
+		strcmp(phpVersion, "php-8.3.0") == 0 ||
+		strcmp(phpVersion, "php-8.2.0") == 0 ||
+		strcmp(phpVersion, "php-8.1.0") == 0 ||
+		strcmp(phpVersion, "php-8.0.0") == 0
+		) {
+		sprintf_s(dllFilePath, sizeof(dllFilePath), "%s/php8apache2_4.dll", serviceVersionDir);
+		if (_access_s(dllFilePath, 0) != 0) {
+			MessageBoxA(NULL, "Please select from the list and download the PHP version with the 'ts' (Thread Safe) flag to get the missing 'php8apache2_4.dll' file.", NULL, 0);
+			return -1;
+		}
+		sprintf_s(result, bufferSize, "LoadModule php_module \"%s\"", dllFilePath);
 	}
-	else if (strcmp(phpVersion, "php-7.2.6") == 0) {
-		sprintf_s(result, bufferSize, "LoadModule php7_module \"%s/php7apache2_4.dll\"", serviceVersionDir);
+	else if (
+		strcmp(phpVersion, "php-7.3.0") == 0 ||
+		strcmp(phpVersion, "php-7.2.0") == 0 ||
+		strcmp(phpVersion, "php-7.1.0") == 0 ||
+		strcmp(phpVersion, "php-7.0.0") == 0
+		) {
+		sprintf_s(dllFilePath, sizeof(dllFilePath), "%s/php7apache2_4.dll", serviceVersionDir);
+		if (_access_s(dllFilePath, 0) != 0) {
+			MessageBoxA(NULL, "Please select from the list and download the PHP version with the 'ts' (Thread Safe) flag to get the missing 'php7apache2_4.dll' file.", NULL, 0);
+			return -1;
+		}
+		sprintf_s(result, bufferSize, "LoadModule php7_module \"%s\"", dllFilePath);
 	}
-	else if (strcmp(phpVersion, "php-5.6.10") == 0) {
-		sprintf_s(result, bufferSize, "LoadModule php5_module \"%s/php5apache2_4.dll\"", serviceVersionDir);
+	else if (
+		strcmp(phpVersion, "php-5.6.0") == 0 ||
+		strcmp(phpVersion, "php-5.5.0") == 0
+		) {
+		sprintf_s(dllFilePath, sizeof(dllFilePath), "%s/php5apache2_4.dll", serviceVersionDir);
+		if (_access_s(dllFilePath, 0) != 0) {
+			MessageBoxA(NULL, "Please select from the list and download the PHP version with the 'ts' (Thread Safe) flag to get the missing 'php5apache2_4.dll' file.", NULL, 0);
+			return -1;
+		}
+		sprintf_s(result, bufferSize, "LoadModule php5_module \"%s\"", dllFilePath);
 	}
 	else {
 		strncpy_s(result, bufferSize, "", _TRUNCATE);
+
+		MessageBoxA(NULL, "The httpd service did not find the corresponding php version.", NULL, 0);
+		return -1;
 	}
+
+	return 0;
 }
 
-void versionMatch(const char* serviceType, const char* fileTagVersion, const char* targetFilepath, SoftwareGroupInfo softwareGroupInfo) {
+DWORD versionMatch(const char* serviceType, const char* fileTagVersion, const char* targetFilepath, SoftwareGroupInfo softwareGroupInfo) {
 	char* wProgramDirectory = get_current_program_directory_with_forward_slash();
 
 	// php.ini
@@ -36,22 +78,23 @@ void versionMatch(const char* serviceType, const char* fileTagVersion, const cha
 	FILE *sourceFile, *newFile;
 
 	char sourceFilename[256];
-	sprintf_s(sourceFilename, sizeof(sourceFilename), "%s/Repository/%s/%s.txt", wProgramDirectory, serviceType, fileTagVersion);
+	sprintf_s(sourceFilename, sizeof(sourceFilename), "%s/repository/%s/%s.txt", wProgramDirectory, serviceType, fileTagVersion);
 	if (_access_s(sourceFilename, 0) != 0) {
-		return;
+		MessageBoxA(NULL, "The repository txt file does not exist, please rebuild the project.", NULL, 0);
+		return -1;
 	}
 	errno_t err;
 
 	err = fopen_s(&sourceFile, sourceFilename, "rb");
 	if (err != 0) {
-		MessageBoxA(NULL, "The Repository directory does not exist, please rebuild the project.", NULL, 0);
-		return;
+		MessageBoxA(NULL, "The repository directory does not exist, please rebuild the project.", NULL, 0);
+		return -1;
 	}
 
 	err = fopen_s(&newFile, targetFilepath, "wb");
 	if (err != 0) {
 		MessageBoxA(NULL, "Target file does not exist, please download it first", NULL, 0);
-		return;
+		return -1;
 	}
 
 	char buffer[1024];
@@ -72,7 +115,12 @@ void versionMatch(const char* serviceType, const char* fileTagVersion, const cha
 	char wwwLogsDir[256];
 	sprintf_s(wwwLogsDir, sizeof(wwwLogsDir), "%s/www_logs", wProgramDirectory);
 
-	if (strcmp(serviceType, "apache") == 0) {
+	if (strcmp(serviceType, "php") == 0) {
+		char phpExtensionDir[512];
+		sprintf_s(phpExtensionDir, sizeof(phpExtensionDir), "%s/service/php/%s/ext", wProgramDirectory, softwareGroupInfo.php.version);
+
+		replaceStringInFile(targetFilepath, "{{TPL_VAR:PHPExtensionDir}}", phpExtensionDir);
+	} else if (strcmp(serviceType, "apache") == 0) {
 		replaceStringInFile(targetFilepath, "{{TPL_VAR:DocumentRoot}}", wwwDefaultDir);
 		replaceStringInFile(targetFilepath, "{{TPL_VAR:ServerName}}", "localhost:80");
 		replaceStringInFile(targetFilepath, "{{TPL_VAR:wwwLogs}}", wwwLogsDir);
@@ -90,17 +138,44 @@ void versionMatch(const char* serviceType, const char* fileTagVersion, const cha
 
 			replaceStringInFile(targetFilepath, "{{TPL_VAR:SRVROOT}}", apacheBaseDir);
 
-			replaceStringInFile(targetFilepath, "{{TPL_VAR:addType}}", "AddType application/x-httpd-php .php");
+			replaceStringInFile(targetFilepath, "{{TPL_VAR:addType}}", "AddType application/x-httpd-php .php .html");
 
 			char phpIniDir[512];
-			sprintf_s(phpIniDir, sizeof(phpIniDir), "phpIniDir %s", phpDir);
+			sprintf_s(phpIniDir, sizeof(phpIniDir), "phpIniDir \"%s\"", phpDir);
 
 			replaceStringInFile(targetFilepath, "{{TPL_VAR:phpIniDir}}", phpIniDir);
 
 			char dllStr[512];
-			// phpIniDir
+			if (phpApacheDll(softwareGroupInfo.php.versionNumber, phpDir, dllStr, sizeof(dllStr)) != 0) {
+				return -1;
+			}
 
-			phpApacheDll(softwareGroupInfo.php.version, phpDir, dllStr, sizeof(dllStr));
+			// The curl dependency dll for php 7.3 cannot be actively loaded
+			if (strcmp(softwareGroupInfo.php.versionNumber, "php-7.3.0") == 0) {
+				char libcryptox64_File[512];
+				char libsslx64_File[512];
+				char libssh2_File[512];
+				char loadFileStr[2048];
+				sprintf_s(libcryptox64_File, sizeof(libcryptox64_File), "%s/libcrypto-1_1-x64.dll", phpDir);
+				sprintf_s(libsslx64_File, sizeof(libsslx64_File), "%s/libssl-1_1-x64.dll", phpDir);
+				sprintf_s(libssh2_File, sizeof(libssh2_File), "%s/libssh2.dll", phpDir);
+				sprintf_s(loadFileStr, sizeof(loadFileStr), "LoadFile \"%s\" \"%s\" \"%s\"", libcryptox64_File, libsslx64_File, libssh2_File);
+
+				replaceStringInFile(targetFilepath, "{{TPL_VAR:LoadFile}}", loadFileStr);
+			} else if (strcmp(softwareGroupInfo.php.versionNumber, "php-5.5.0") == 0 ||
+				strcmp(softwareGroupInfo.php.versionNumber, "php-5.6.0") == 0) {
+				char libeay32_File[512];
+				char ssleay32_File[512];
+				char loadFileStr[2048];
+				sprintf_s(libeay32_File, sizeof(libeay32_File), "%s/libeay32.dll", phpDir);
+				sprintf_s(ssleay32_File, sizeof(ssleay32_File), "%s/ssleay32.dll", phpDir);
+				sprintf_s(loadFileStr, sizeof(loadFileStr), "LoadFile \"%s\" \"%s\"", libeay32_File, ssleay32_File);
+
+				replaceStringInFile(targetFilepath, "{{TPL_VAR:LoadFile}}", loadFileStr);
+			}
+			else {
+				replaceStringInFile(targetFilepath, "{{TPL_VAR:LoadFile}}", "");
+			}
 
 			replaceStringInFile(targetFilepath, "{{TPL_VAR:phpLoadModule}}", dllStr);
 		}
@@ -110,16 +185,18 @@ void versionMatch(const char* serviceType, const char* fileTagVersion, const cha
 		replaceStringInFile(targetFilepath, "{{TPL_VAR:ServerName}}", "localhost");
 		replaceStringInFile(targetFilepath, "{{TPL_VAR:wwwLogs}}", wwwLogsDir);
 	}
+
+	return 0;
 }
 
-void sync(SoftwareGroupInfo softwareGroupInfo) {
+DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 	char* wProgramDirectory = get_current_program_directory_with_forward_slash();
 
 	char webDir[256];
 	sprintf_s(webDir, sizeof(webDir), "%s/www", wProgramDirectory);
 	if (!DirectoryExists(webDir)) {
 		if (!CreateDirectoryA(webDir, NULL)) {
-			return;
+			return -1;
 		}
 	}
 
@@ -127,7 +204,7 @@ void sync(SoftwareGroupInfo softwareGroupInfo) {
 	sprintf_s(webDefaultDir, sizeof(webDefaultDir), "%s/www/default", wProgramDirectory);
 	if (!DirectoryExists(webDefaultDir)) {
 		if (!CreateDirectoryA(webDefaultDir, NULL)) {
-			return;
+			return -1;
 		}
 	}
 
@@ -135,7 +212,7 @@ void sync(SoftwareGroupInfo softwareGroupInfo) {
 	sprintf_s(webLogsDir, sizeof(webLogsDir), "%s/www_logs", wProgramDirectory);
 	if (!DirectoryExists(webLogsDir)) {
 		if (!CreateDirectoryA(webLogsDir, NULL)) {
-			return;
+			return -1;
 		}
 	}
 
@@ -154,24 +231,32 @@ void sync(SoftwareGroupInfo softwareGroupInfo) {
 	char phpIniPath[256];
 	sprintf_s(phpIniPath, sizeof(phpIniPath), "%s/service/php/%s/php.ini", wProgramDirectory, softwareGroupInfo.php.version);
 
-	versionMatch("php", softwareGroupInfo.php.version, phpIniPath, softwareGroupInfo);
+	if (versionMatch("php", softwareGroupInfo.php.versionNumber, phpIniPath, softwareGroupInfo) != 0) {
+		return -1;
+	}
 
 	if (softwareGroupInfo.apache.version != NULL) {
 		// apache
 		char httpdConfPath[256];
 		sprintf_s(httpdConfPath, sizeof(httpdConfPath), "%s/service/apache/%s/Apache24/conf/httpd.conf", wProgramDirectory, softwareGroupInfo.apache.version);
-		versionMatch("apache", softwareGroupInfo.apache.version, httpdConfPath, softwareGroupInfo);
+		if (versionMatch("apache", softwareGroupInfo.apache.version, httpdConfPath, softwareGroupInfo) != 0) {
+			return -1;
+		}
 
 		char httpdVhostsConf[256];
 		sprintf_s(httpdVhostsConf, sizeof(httpdVhostsConf), "%s/service/apache/%s/Apache24/conf/extra/httpd-vhosts.conf", wProgramDirectory, softwareGroupInfo.apache.version);
 
-		versionMatch("apache", "vhosts", httpdVhostsConf, softwareGroupInfo);
+		if (versionMatch("apache", "vhosts", httpdVhostsConf, softwareGroupInfo) != 0) {
+			return -1;
+		}
 	}
 	else {
 		// nginx
 		char nginxConfPath[256];
 		sprintf_s(nginxConfPath, sizeof(nginxConfPath), "%s/service/nginx/%s/conf/nginx.conf", wProgramDirectory, softwareGroupInfo.nginx.version);
-		versionMatch("nginx", softwareGroupInfo.nginx.version, nginxConfPath, softwareGroupInfo);
+		if (versionMatch("nginx", softwareGroupInfo.nginx.version, nginxConfPath, softwareGroupInfo) != 0) {
+			return -1;
+		}
 
 		char nginxVhostsDir[256];
 		sprintf_s(nginxVhostsDir, sizeof(nginxVhostsDir), "%s/service/nginx/%s/conf/vhosts", wProgramDirectory, softwareGroupInfo.nginx.version);
@@ -185,12 +270,18 @@ void sync(SoftwareGroupInfo softwareGroupInfo) {
 			else {
 				Log("nginxVhostsDir create fail.");
 				// Folder create fail
+				MessageBoxA(NULL, "Nginx Folder create fail", NULL, 0);
+				return -1;
 			}
 		}
 
 		char nginxVhostsConf[256];
 		sprintf_s(nginxVhostsConf, sizeof(nginxVhostsConf), "%s/service/nginx/%s/conf/vhosts/default.conf", wProgramDirectory, softwareGroupInfo.nginx.version);
-		versionMatch("nginx", "vhosts", nginxVhostsConf, softwareGroupInfo);
+		if (versionMatch("nginx", "vhosts", nginxVhostsConf, softwareGroupInfo) != 0) {
+			return -1;
+		}
 	}
+
+	return 0;
 }
 

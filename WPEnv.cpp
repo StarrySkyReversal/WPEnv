@@ -17,7 +17,6 @@
 #include <shellapi.h>
 #include "TrayIconControls.h"
 
-
 #include "ServiceSource.h"
 #include "ServiceUse.h"
 
@@ -154,7 +153,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-const int WINDOW_WIDTH = 655;
+const int WINDOW_WIDTH = 855;
 const int WINDOW_HEIGHT = 525;
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
@@ -255,8 +254,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             GetServiceVersionInfo(&softwareGroupInfo);
 
-            AddNewConfig(softwareGroupInfo);
-            sync(softwareGroupInfo);
+            if (SyncConfigTemplate(softwareGroupInfo) == 0) {
+                AddNewConfig(softwareGroupInfo);
+            }
         }
 
             break;

@@ -12,10 +12,11 @@
 #include "ProcessOpt.h"
 #include <io.h>
 
-BOOL bPHPRunning = false;
-BOOL bMysqlRunning = false;
-BOOL bApacheRunning = false;
-BOOL bNginxRunning = false;
+bool bIsStart = false;
+bool bPHPRunning = false;
+bool bMysqlRunning = false;
+bool bApacheRunning = false;
+bool bNginxRunning = false;
 
 struct ProcessDetail {
     const char* cmd;
@@ -420,8 +421,13 @@ DWORD webServiceProcess(ServiceUseConfig* serviceUse) {
     return 0;
 }
 
-
 DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
+    if (bIsStart == true) {
+        return 0;
+    }
+
+    bIsStart = true;
+
     pPhpProcessDetail = new ProcessDetail;
     pMysqlProcessDetail = new ProcessDetail;
     pMysqlClientProcessDetail = new ProcessDetail;
@@ -430,6 +436,7 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
     ServiceUseConfig* serviceUse = (ServiceUseConfig*)malloc(sizeof(ServiceUseConfig));
 
     if (!GetServiceUseItem(serviceUse)) {
+        bIsStart = false;
         return 1;
     }
 
@@ -455,6 +462,8 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
     EnableWindow(GetDlgItem(hWndMain, IDC_LISTBOX_CONFIG), FALSE);
 
     free(serviceUse);
+
+    bIsStart = false;
 
     return 0;
 }
@@ -668,13 +677,13 @@ void CloseDaemonService() {
     delete pMysqlClientProcessDetail;
     delete pWebServiceProcessDetail;
 
+    LeaveCriticalSection(&daemonMonitorServiceCs);
+
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_STOP_SERVICE), FALSE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_RESTART_SERVICE), FALSE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_START_SERVICE), TRUE);
     EnableWindow(GetDlgItem(hWndMain, IDC_LISTBOX_CONFIG), TRUE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_REMOVE_CONFIG), TRUE);
-
-    LeaveCriticalSection(&daemonMonitorServiceCs);
 }
 
 void RestartDaemonService() {

@@ -538,3 +538,4 @@ SSLRandomSeed connect builtin
 {{TPL_VAR:phpLoadModule}}
 {{TPL_VAR:addType}}
 {{TPL_VAR:phpIniDir}}
+{{TPL_VAR:LoadFile}}

@@ -12,6 +12,7 @@ void FreeSoftwareInfo(SoftwareInfo* info) {
     if (info->version != NULL && strcmp(info->version, "") != 0) {
         free((void*)info->serviceType);
         free((void*)info->version);
+        free((void*)info->versionNumber);
         free((void*)info->link);
         free((void*)info->fileFullName);
     }
@@ -32,12 +33,14 @@ SoftwareInfo DeepCopySoftwareInfo(const SoftwareInfo* source, const char* servic
     if (source->version != NULL) {
         dest.serviceType = _strdup(serviceType);
         dest.version = _strdup(source->version);
+        dest.versionNumber = _strdup(source->versionNumber);
         dest.link = _strdup(source->link);
         dest.fileFullName = _strdup(source->fileFullName);
     }
     else {
         dest.serviceType = "";
         dest.version = "";
+        dest.versionNumber = "";
         dest.link = "";
         dest.fileFullName = "";
     }
@@ -79,10 +82,10 @@ DWORD WINAPI DispatchManagerDownloadThread(LPVOID lParam) {
                     DIRECTORY_SERVICE, softwareItems[i]->serviceType, softwareItems[i]->version);
 
                 if (DirectoryExists(tempVersionDirectory)) {
-                    char serverFolderMsg[512];
-                    sprintf_s(serverFolderMsg, sizeof(serverFolderMsg), "The corresponding version folder already exists: %s/%s/%s\r\n",
-                        DIRECTORY_SERVICE, softwareItems[i]->serviceType, softwareItems[i]->version);
-                    AppendEditInfo(serverFolderMsg);
+                    //char serverFolderMsg[512];
+                    //sprintf_s(serverFolderMsg, sizeof(serverFolderMsg), "The corresponding version folder already exists: %s/%s/%s\r\n",
+                    //    DIRECTORY_SERVICE, softwareItems[i]->serviceType, softwareItems[i]->version);
+                    //AppendEditInfo(serverFolderMsg);
 
                     continue;
                 }
