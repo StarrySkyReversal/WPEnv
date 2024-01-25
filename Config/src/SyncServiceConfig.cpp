@@ -9,6 +9,7 @@
 #include "SyncServiceConfig.h"
 #include "FileFindOpt.h"
 #include  "ServiceUse.h"
+#include "Compression.h"
 
 DWORD phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* result, size_t bufferSize) {
 	//char tempPHPVersion[256];
@@ -191,6 +192,32 @@ DWORD versionMatch(const char* serviceType, const char* fileTagVersion, const ch
 
 DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 	char* wProgramDirectory = get_current_program_directory_with_forward_slash();
+
+	// 判断默认包是否解压
+	char apacheDir[512];
+	sprintf_s(apacheDir, sizeof(apacheDir), "%s/service/apache", wProgramDirectory);
+	char nginxDir[512];
+	sprintf_s(nginxDir, sizeof(nginxDir), "%s/service/nginx", wProgramDirectory);
+
+	char defaultApacheVersionDir[512];
+	char defaultNginxVersionDir[512];
+	sprintf_s(defaultApacheVersionDir, sizeof(defaultApacheVersionDir), "%s/httpd-2.4.58", apacheDir);
+	sprintf_s(defaultNginxVersionDir, sizeof(defaultNginxVersionDir), "%s/nginx-1.24.0", nginxDir);
+
+	char defaultApacheFile[512];
+	char defaultNginxFile[512];
+	sprintf_s(defaultApacheFile, sizeof(defaultApacheFile), "%s/downloads/httpd-2.4.58.zip", wProgramDirectory);
+	sprintf_s(defaultNginxFile, sizeof(defaultNginxFile), "%s/downloads/nginx-1.24.0.zip", wProgramDirectory);
+
+
+	if (!DirectoryExists(defaultApacheVersionDir)) {
+		extract_zip_file(defaultApacheFile, "apache", "httpd-2.4.58");
+	}
+
+
+	if (!DirectoryExists(defaultNginxVersionDir)) {
+		extract_zip_file(defaultNginxFile, "nginx", "nginx-1.24.0");
+	}
 
 	char webDir[256];
 	sprintf_s(webDir, sizeof(webDir), "%s/www", wProgramDirectory);
