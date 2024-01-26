@@ -200,6 +200,7 @@ XCOPY "$(SolutionDir)Repository\packages" "$(TargetDir)downloads\" /S /Y</Comman
     <ClInclude Include="WPEnv.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Config\src\ConfigHeader.cpp" />
     <ClCompile Include="Config\src\SyncServiceConfig.cpp" />
     <ClCompile Include="Download\src\CurlRuquestOpt.cpp" />
     <ClCompile Include="Download\src\DownloadQueue.cpp" />

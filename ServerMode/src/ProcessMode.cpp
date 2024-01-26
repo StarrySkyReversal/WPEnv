@@ -20,11 +20,21 @@ bool bMysqlRunning = false;
 bool bApacheRunning = false;
 bool bNginxRunning = false;
 
+struct ProcessPipe {
+    HANDLE hRead;
+    HANDLE hWrite;
+    HANDLE hProcess;
+    HANDLE hThread;
+    const char* processName;
+    //HANDLE hThread;
+};
+
 struct ProcessDetail {
     const char* cmd;
     const char* dir;
     const char* processName;
     const char* serviceName;
+    ProcessPipe pipe;
     PROCESS_INFORMATION pi;
 };
 
@@ -41,14 +51,6 @@ int EndsWithNewline(const char* str) {
     }
     return 0;
 }
-
-struct ProcessPipe {
-    HANDLE hRead;
-    HANDLE hWrite;
-    HANDLE hProcess;
-    const char* processName;
-    //HANDLE hThread;
-};
 
 DWORD ReadFromPipeThread(LPVOID lpParam) {
     ProcessPipe* processPipe = (ProcessPipe*)lpParam;
@@ -82,9 +84,9 @@ DWORD ReadFromPipeThread(LPVOID lpParam) {
         }
     }
 
-    CloseHandle(processPipe->hRead);  // Close the handle once you are done reading
+    //CloseHandle(processPipe->hRead);  // Close the handle once you are done reading
 
-    delete processPipe;
+    //delete processPipe;
     return 0;
 }
 
@@ -162,12 +164,13 @@ bool CalllCreateProcess(ProcessDetail* pProcessDetail, bool waitProcess = false)
         CloseHandle(hJob);
     }
 
-    ProcessPipe* processPipe = new ProcessPipe;
-    processPipe->hRead = hRead;
-    processPipe->hProcess = pProcessDetail->pi.hProcess;
-    processPipe->processName = pProcessDetail->processName;
+    pProcessDetail->pipe.hRead = hRead;
+    pProcessDetail->pipe.hProcess = pProcessDetail->pi.hProcess;
+    pProcessDetail->pipe.processName = pProcessDetail->processName;
 
-    HANDLE hThread = CreateThread(NULL, 0, ReadFromPipeThread, processPipe, 0, NULL);
+    HANDLE hThread = CreateThread(NULL, 0, ReadFromPipeThread, &pProcessDetail->pi, 0, NULL);
+    pProcessDetail->pipe.hThread = hThread;
+
     //if (hThread) {
     //    WaitForSingleObject(hThread, INFINITE);
     //}
@@ -431,8 +434,11 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
     bIsStart = true;
 
     pPhpProcessDetail = new ProcessDetail;
+    pPhpProcessDetail->cmd = NULL;
     pMysqlProcessDetail = new ProcessDetail;
+    pMysqlProcessDetail->cmd = NULL;
     pMysqlClientProcessDetail = new ProcessDetail;
+    pMysqlClientProcessDetail->cmd = NULL;
     pWebServiceProcessDetail = new ProcessDetail;
 
     ServiceUseConfig* serviceUse = (ServiceUseConfig*)malloc(sizeof(ServiceUseConfig));
@@ -445,6 +451,11 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
     SoftwareGroupInfo softwareGroupInfo;
     GetConfigViewVersionInfo(&softwareGroupInfo, serviceUse);
     SyncPHPAndApacheConf(softwareGroupInfo, *serviceUse);
+
+    FreeSoftwareInfo(&softwareGroupInfo.php);
+    FreeSoftwareInfo(&softwareGroupInfo.mysql);
+    FreeSoftwareInfo(&softwareGroupInfo.apache);
+    FreeSoftwareInfo(&softwareGroupInfo.nginx);
 
     ClearRichEdit();
 
@@ -475,14 +486,20 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
 }
 
 void freeWebDaemonServiceInstance(WebDaemonService* webDaemonService) {
-    free((void*)webDaemonService->phpExePath);
-    free((void*)webDaemonService->phpExeDirectory);
+    if (webDaemonService->phpExePath != NULL) {
+        free((void*)webDaemonService->phpExePath);
+        free((void*)webDaemonService->phpExeDirectory);
+    }
 
-    free((void*)webDaemonService->mysqldExePath);
-    free((void*)webDaemonService->mysqldExeDirectory);
+    if (webDaemonService->mysqldExePath != NULL) {
+        free((void*)webDaemonService->mysqldExePath);
+        free((void*)webDaemonService->mysqldExeDirectory);
+    }
 
-    free((void*)webDaemonService->webServiceExePath);
-    free((void*)webDaemonService->webServiceExeDirectory);
+    if (webDaemonService->webServiceExePath != NULL) {
+        free((void*)webDaemonService->webServiceExePath);
+        free((void*)webDaemonService->webServiceExeDirectory);
+    }
 }
 
 DWORD WINAPI DaemonMonitorService(LPVOID lParam) {
@@ -679,6 +696,26 @@ void CloseDaemonService() {
     }
 
     freeWebDaemonServiceInstance(&webDaemonServiceInstance);
+
+    if (pPhpProcessDetail->cmd != NULL) {
+        CloseHandle(pPhpProcessDetail->pipe.hThread);
+        CloseHandle(pPhpProcessDetail->pipe.hRead);
+    }
+
+    if (pMysqlProcessDetail->cmd != NULL) {
+        CloseHandle(pMysqlProcessDetail->pipe.hThread);
+        CloseHandle(pMysqlProcessDetail->pipe.hRead);
+    }
+
+    if (pMysqlClientProcessDetail->cmd != NULL) {
+        CloseHandle(pMysqlClientProcessDetail->pipe.hThread);
+        CloseHandle(pMysqlClientProcessDetail->pipe.hRead);
+    }
+
+    if (pWebServiceProcessDetail->cmd != NULL) {
+        CloseHandle(pWebServiceProcessDetail->pipe.hThread);
+        CloseHandle(pWebServiceProcessDetail->pipe.hRead);
+    }
 
     delete pPhpProcessDetail;
     delete pMysqlProcessDetail;

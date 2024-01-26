@@ -233,6 +233,9 @@
     <ClCompile Include="Config\src\SyncServiceConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Config\src\ConfigHeader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WPEnv.rc">

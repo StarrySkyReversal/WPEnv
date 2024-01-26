@@ -21,3 +21,11 @@ typedef struct {
     char webService[256];
     int itemCount;
 } ServiceUseConfig;
+
+void FreeSoftwareInfo(SoftwareInfo* info);
+
+void FreeSoftwareGroupInfo(SoftwareGroupInfo* group);
+
+SoftwareInfo DeepCopySoftwareInfo(const SoftwareInfo* source, const char* serviceType);
+
+SoftwareGroupInfo* DeepCopySoftwareGroupInfo(const SoftwareGroupInfo* source);

@@ -94,9 +94,21 @@ DWORD GetConfigViewVersionInfo(SoftwareGroupInfo* softwareGroupInfo, ServiceUseC
 
     if (strstr(serviceUse->webService, "httpd") != NULL) {
         ResolveSoftwareInfo(&(softwareGroupInfo->apache), serviceUse->webService, "apache");
+
+        softwareGroupInfo->nginx.serviceType = NULL;
+        softwareGroupInfo->nginx.version = NULL;
+        softwareGroupInfo->nginx.versionNumber = NULL;
+        softwareGroupInfo->nginx.link = NULL;
+        softwareGroupInfo->nginx.fileFullName = NULL;
     }
     else {
         ResolveSoftwareInfo(&(softwareGroupInfo->nginx), serviceUse->webService, "nginx");
+
+        softwareGroupInfo->apache.serviceType = NULL;
+        softwareGroupInfo->apache.version = NULL;
+        softwareGroupInfo->apache.versionNumber = NULL;
+        softwareGroupInfo->apache.link = NULL;
+        softwareGroupInfo->apache.fileFullName = NULL;
     }
 
     return 0;
