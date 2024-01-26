@@ -1,21 +1,11 @@
 #pragma once
 
-typedef struct {
-    const char* version;
-    const char* versionNumber;
-    const char* link;
-    const char* serviceType;
-    const char* fileFullName;
-} SoftwareInfo;
-
-typedef struct {
-    SoftwareInfo php;
-    SoftwareInfo mysql;
-    SoftwareInfo apache;
-    SoftwareInfo nginx;
-} SoftwareGroupInfo;
+#include "ConfigHeader.h"
 
 void InitializeServiceSource();
 void LoadServiceSourceData();
 void LoadServiceSourceDataToListBox();
 DWORD GetServiceVersionInfo(SoftwareGroupInfo* softwareGroupInfo);
+void ResolveSoftwareInfo(SoftwareInfo* software, const char* version, const char* softwareType);
+DWORD GetConfigViewVersionInfo(SoftwareGroupInfo* softwareGroupInfo, ServiceUseConfig* serviceUse);
+bool AddNewConfig(SoftwareGroupInfo softwareGroupInfo);

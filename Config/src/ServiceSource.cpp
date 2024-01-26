@@ -1,11 +1,12 @@
 #include "framework.h"
+#include "ServiceUse.h"
 #include "ServiceSource.h"
 #include "BaseFileOpt.h"
 #include <stdio.h>
 #include <jansson.h>
 #include "WindowLayout.h"
 #include "Common.h"
-#include<direct.h>
+#include <direct.h>
 
 char* ServiceSourceData;
 json_t* ServiceSourceDataJson;
@@ -39,31 +40,35 @@ int GetLinkFromJSON(const char* version, const char* softwareName, json_t* jsonS
     return -1;
 }
 
-void SetSoftwareInfo(SoftwareInfo* software, HWND hList, const char* softwareType, json_t* json) {
+void ResolveSoftwareInfo(SoftwareInfo* software, const char* version, const char* softwareType) {
+    char linkBuffer[2048];
+
+    GetLinkFromJSON(version, softwareType, ServiceSourceDataJson, linkBuffer, sizeof(linkBuffer) / sizeof(char));
+
+    char* versionCopy;
+    char* versionNumber;
+    char* context = NULL;
+
+    versionCopy = _strdup(version);
+    versionNumber = strtok_s(versionCopy, "_", &context);
+
+    software->serviceType = _strdup(softwareType);
+    software->version = _strdup(version);
+    software->versionNumber = _strdup(versionNumber);
+    software->link = _strdup(linkBuffer);
+    software->fileFullName = GetFileFullNameFromUrl(version, software->link);
+
+    free(versionCopy);
+}
+
+void SetSoftwareInfo(SoftwareInfo* software, HWND hList, const char* softwareType) {
     LRESULT selectedIndex = SendMessageA(hList, LB_GETCURSEL, 0, 0);
 
     char version[256];
     SendMessageA(hList, LB_GETTEXT, selectedIndex, (LPARAM)version);
 
     if (selectedIndex != -1) {
-        char linkBuffer[2048];
-
-        GetLinkFromJSON(version, softwareType, json, linkBuffer, sizeof(linkBuffer) / sizeof(char));
-
-        char* versionCopy;
-        char* versionNumber;
-        char* context = NULL;
-
-        versionCopy = _strdup(version);
-        versionNumber = strtok_s(versionCopy, "_", &context);
-
-        software->serviceType = _strdup(softwareType);
-        software->version = _strdup(version);
-        software->versionNumber = _strdup(versionNumber);
-        software->link = _strdup(linkBuffer);
-        software->fileFullName = GetFileFullNameFromUrl(version, software->link);
-
-        free(versionCopy);
+        ResolveSoftwareInfo(software, version, softwareType);
     }
     else {
         software->serviceType = NULL;
@@ -75,12 +80,26 @@ void SetSoftwareInfo(SoftwareInfo* software, HWND hList, const char* softwareTyp
 }
 
 DWORD GetServiceVersionInfo(SoftwareGroupInfo* softwareGroupInfo) {
-    SetSoftwareInfo(&(softwareGroupInfo->php), hListPHP, "php", ServiceSourceDataJson);
-    SetSoftwareInfo(&(softwareGroupInfo->mysql), hListMySQL, "mysql", ServiceSourceDataJson);
-    SetSoftwareInfo(&(softwareGroupInfo->apache), hListApache, "apache", ServiceSourceDataJson);
-    SetSoftwareInfo(&(softwareGroupInfo->nginx), hListNginx, "nginx", ServiceSourceDataJson);
+    SetSoftwareInfo(&(softwareGroupInfo->php), hListPHP, "php");
+    SetSoftwareInfo(&(softwareGroupInfo->mysql), hListMySQL, "mysql");
+    SetSoftwareInfo(&(softwareGroupInfo->apache), hListApache, "apache");
+    SetSoftwareInfo(&(softwareGroupInfo->nginx), hListNginx, "nginx");
 
-    return 1;
+    return 0;
+}
+
+DWORD GetConfigViewVersionInfo(SoftwareGroupInfo* softwareGroupInfo, ServiceUseConfig* serviceUse) {
+    ResolveSoftwareInfo(&(softwareGroupInfo->php), serviceUse->php, "php");
+    ResolveSoftwareInfo(&(softwareGroupInfo->mysql), serviceUse->mysql, "mysql");
+
+    if (strstr(serviceUse->webService, "httpd") != NULL) {
+        ResolveSoftwareInfo(&(softwareGroupInfo->apache), serviceUse->webService, "apache");
+    }
+    else {
+        ResolveSoftwareInfo(&(softwareGroupInfo->nginx), serviceUse->webService, "nginx");
+    }
+
+    return 0;
 }
 
 // https://windows.php.net/downloads/releases/archives/

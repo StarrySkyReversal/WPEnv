@@ -11,6 +11,8 @@
 #include "ModeMonitor.h"
 #include "ProcessOpt.h"
 #include <io.h>
+#include "SyncServiceConfig.h"
+
 
 bool bIsStart = false;
 bool bPHPRunning = false;
@@ -439,6 +441,10 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
         bIsStart = false;
         return 1;
     }
+
+    SoftwareGroupInfo softwareGroupInfo;
+    GetConfigViewVersionInfo(&softwareGroupInfo, serviceUse);
+    SyncPHPAndApacheConf(softwareGroupInfo);
 
     ClearRichEdit();
 

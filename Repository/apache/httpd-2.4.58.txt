@@ -535,7 +535,9 @@ SSLRandomSeed startup builtin
 SSLRandomSeed connect builtin
 </IfModule>
 
+#TPL_VAR_Block_PHPAndApache_Start
 {{TPL_VAR:phpLoadModule}}
 {{TPL_VAR:addType}}
 {{TPL_VAR:phpIniDir}}
 {{TPL_VAR:LoadFile}}
+#TPL_VAR_Block_PHPAndApache_End

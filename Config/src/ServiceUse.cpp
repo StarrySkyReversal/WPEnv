@@ -1,6 +1,4 @@
 #include "framework.h"
-#include "ServiceUse.h"
-#include "ServiceSource.h"
 #include <stdio.h>
 #include "ListViewControls.h"
 #include "WindowLayout.h"
@@ -11,8 +9,10 @@
 #include "Common.h"
 #include "FindPattern.h"
 #include "SyncServiceConfig.h"
+#include "ServiceUse.h"
+#include "ServiceSource.h"
 
-ServiceUseConfig serviceUseConfigs[MAX_CONFIGS] = { 0 };
+ServiceUseConfig serviceUseConfigs[256] = { 0 };
 
 int ReadServiceUseConfig(const char* filePath, ServiceUseConfig* configs) {
     FILE* file;
@@ -21,10 +21,10 @@ int ReadServiceUseConfig(const char* filePath, ServiceUseConfig* configs) {
         return 0;
     }
 
-    char line[MAX_CONFIG_LEN];
+    char line[256];
     int index = 0;
 
-    while (fgets(line, sizeof(line), file) && index < MAX_CONFIGS) {
+    while (fgets(line, sizeof(line), file) && index < 256) {
         char* newline = strchr(line, L'\n');
         if (newline) *newline = '\0';
 
@@ -66,8 +66,8 @@ int RemoveServiceUseItem(const char* filePath, int itemIndex) {
         return 0;
     }
 
-    char line[MAX_CONFIG_LEN];
-    char tempPath[MAX_PATH];
+    char line[256];
+    char tempPath[256];
 
     strcpy_s(tempPath, sizeof(tempPath), filePath);
     strcat_s(tempPath, sizeof(tempPath), ".tmp_webservice");  // Create a temporary filename

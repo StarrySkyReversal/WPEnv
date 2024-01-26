@@ -6,10 +6,13 @@
 #include "Log.h"
 #include "BaseFileOpt.h"
 #include "FileModify.h"
+#include "ServiceUse.h"
+#include "ServiceSource.h"
 #include "SyncServiceConfig.h"
 #include "FileFindOpt.h"
-#include  "ServiceUse.h"
 #include "Compression.h"
+#include <errno.h>
+
 
 DWORD phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* result, size_t bufferSize) {
 	//char tempPHPVersion[256];
@@ -193,7 +196,7 @@ DWORD versionMatch(const char* serviceType, const char* fileTagVersion, const ch
 DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 	char* wProgramDirectory = get_current_program_directory_with_forward_slash();
 
-	// 判断默认包是否解压
+	// Determine if the default package is unpacked
 	char apacheDir[512];
 	sprintf_s(apacheDir, sizeof(apacheDir), "%s/service/apache", wProgramDirectory);
 	char nginxDir[512];
@@ -312,3 +315,77 @@ DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 	return 0;
 }
 
+DWORD SyncPHPAndApacheConf(SoftwareGroupInfo softwareGroupInfo) {
+	char apacheBaseDir[256];
+	getApacheVersionAbsBaseDir(softwareGroupInfo.apache.version, apacheBaseDir, sizeof(apacheBaseDir));
+
+	char sourcePath[512];
+	sprintf_s(sourcePath, sizeof(sourcePath), "%s/conf/httpd.conf", apacheBaseDir);
+
+	char tempPath[512];
+	sprintf_s(tempPath, sizeof(tempPath), "%s/conf/httpd.conf.temp", apacheBaseDir);
+
+	FILE* sourceFile, *newFile;
+
+	errno_t err;
+
+	err = fopen_s(&sourceFile, sourcePath, "rb+");
+	if (err != 0) {
+		MessageBoxA(NULL, "Switching php version apache configuration did not synchronize successfully, please exit the apache configuration file being edited.", NULL, 0);
+		return -1;
+	}
+
+	err = fopen_s(&newFile, tempPath, "wb+");
+	if (err != 0) {
+		MessageBoxA(NULL, "Switching the php version of apache configuration did not synchronize successfully, create file failed.", NULL, 0);
+		return -1;
+	}
+
+	char line[1024];
+	bool IsBlockArea = false;
+	while (fgets(line, sizeof(line), sourceFile)) {
+		if (strstr(line, "#TPL_VAR_Block_PHPAndApache_Start") != NULL) {
+			IsBlockArea = true;
+			fputs("#TPL_VAR_Block_PHPAndApache_Start\r\n", newFile);
+			fputs("{{TPL_VAR:phpLoadModule}}\r\n", newFile);
+			fputs("{{TPL_VAR:addType}}\r\n", newFile);
+			fputs("{{TPL_VAR:phpIniDir}}\r\n", newFile);
+			fputs("{{TPL_VAR:LoadFile}}\r\n", newFile);
+
+			continue;
+		}
+
+		if (IsBlockArea == true) {
+			if (strstr(line, "#TPL_VAR_Block_PHPAndApache_End") != NULL) {
+				IsBlockArea = false;
+				fputs("#TPL_VAR_Block_PHPAndApache_End\r\n", newFile);
+			}
+			else {
+				continue;
+			}
+		}
+		else {
+			fputs(line, newFile);
+		}
+	}
+
+	fclose(sourceFile);
+	fclose(newFile);
+
+	remove(sourcePath);
+	int result = rename(tempPath, sourcePath);
+	if (result != 0) {
+		char errorMsg[256];
+		strerror_s(errorMsg, sizeof(errorMsg), errno);
+
+		MessageBoxA(NULL, "Switching the php version of apache configuration did not synchronize successfully, temp file create failed.", NULL, 0);
+		return -1;
+	}
+
+	if (versionMatch("apache", softwareGroupInfo.apache.version, sourcePath, softwareGroupInfo) != 0) {
+		MessageBoxA(NULL, "Switching the php version of apache configuration did not synchronize successfully, sync new file content failed.", NULL, 0);
+		return -1;
+	}
+
+	return 0;
+}

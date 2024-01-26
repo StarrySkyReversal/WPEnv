@@ -165,6 +165,7 @@ XCOPY "$(SolutionDir)Repository\packages" "$(TargetDir)downloads\" /S /Y</Comman
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Config\include\ConfigHeader.h" />
     <ClInclude Include="Config\include\SyncServiceConfig.h" />
     <ClInclude Include="Download\include\CurlRequestOpt.h" />
     <ClInclude Include="Download\include\DownloadQueue.h" />

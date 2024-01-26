@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Resource.h"
+#include "ServiceSource.h"
 
 extern HWND hWndMain;
 extern CRITICAL_SECTION daemonMonitorServiceCs;

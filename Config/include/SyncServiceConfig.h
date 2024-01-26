@@ -1,5 +1,7 @@
 #pragma once
 
-#include "ServiceSource.h"
+#include "ConfigHeader.h"
 
 DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo);
+
+DWORD SyncPHPAndApacheConf(SoftwareGroupInfo softwareGroupInfo);

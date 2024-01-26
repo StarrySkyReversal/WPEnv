@@ -21,11 +21,6 @@ void GetDirectoryFromPath(const char* fullPath, char* directory, size_t director
 
 int ReadFileContent(const char* filePath, char** buffer, DWORD* size);
 bool CheckFileExists(const char* filePath);
-bool WriteStringToFileAsUTF8(const char* filePath, const char* content);
-bool CreateNewFile(const char* filePath);
-
-char** FindPartFileChunksWithPrefix(const char* directory, const char* targetPrefix, int* count);
-void freeParFileChunkList(char** fileList, int count);
 
 bool GetFileSize(const char* filepath, unsigned long long* size);
 
