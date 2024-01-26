@@ -621,6 +621,8 @@ void CloseDaemonService() {
         return;
     }
 
+    webDaemonServiceInstance.bRun = false;
+
     EnterCriticalSection(&daemonMonitorServiceCs);
 
     ProcessDetail pProcessDetail;

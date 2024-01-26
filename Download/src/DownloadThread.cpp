@@ -124,8 +124,8 @@ DWORD WINAPI DaemonMonitorThread(LPVOID param) {
                 numLockFlowMax += 2;    // only addition
             }
 
-            if (numLockFlowMax < 16) numLockFlowMax = 16;
-            if (numLockFlowMax > 128) numLockFlowMax = 128;
+            if (numLockFlowMax < 8) numLockFlowMax = 8;
+            if (numLockFlowMax > 32) numLockFlowMax = 32;
 
             Log("numLockFlowMax:%d\r\n", numLockFlowMax);
 
@@ -373,7 +373,7 @@ void win32_locking_callback(int mode, int type, const char* file, int line) {
 DWORD WINAPI DownloadManagerThread(LPVOID param) {
     SoftwareInfo* pSoftwareInfo = (SoftwareInfo*)param;
 
-    int totalPartSize = 128;
+    int totalPartSize = 32;
     downlodedTotalSize = 0;
     numDynamicSubPartSize = 16;
 
@@ -384,7 +384,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
     bStartMonitor = false;
 
     numLockFlow = 0;
-    numLockFlowMax = 16;
+    numLockFlowMax = 8;
 
     if (!DirectoryExists(DIRECTORY_DOWNLOAD)) {
         CreateDirectoryA(DIRECTORY_DOWNLOAD, NULL);
