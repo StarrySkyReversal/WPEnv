@@ -4,4 +4,4 @@
 
 DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo);
 
-DWORD SyncPHPAndApacheConf(SoftwareGroupInfo softwareGroupInfo);
+DWORD SyncPHPAndApacheConf(SoftwareGroupInfo softwareGroupInfo, ServiceUseConfig serviceUse);

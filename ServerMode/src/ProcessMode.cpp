@@ -444,7 +444,7 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
 
     SoftwareGroupInfo softwareGroupInfo;
     GetConfigViewVersionInfo(&softwareGroupInfo, serviceUse);
-    SyncPHPAndApacheConf(softwareGroupInfo);
+    SyncPHPAndApacheConf(softwareGroupInfo, *serviceUse);
 
     ClearRichEdit();
 

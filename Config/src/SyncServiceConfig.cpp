@@ -315,7 +315,11 @@ DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 	return 0;
 }
 
-DWORD SyncPHPAndApacheConf(SoftwareGroupInfo softwareGroupInfo) {
+DWORD SyncPHPAndApacheConf(SoftwareGroupInfo softwareGroupInfo, ServiceUseConfig serviceUse) {
+	if (strstr(serviceUse.webService, "httpd") == NULL) {
+		return -1;
+	}
+
 	char apacheBaseDir[256];
 	getApacheVersionAbsBaseDir(softwareGroupInfo.apache.version, apacheBaseDir, sizeof(apacheBaseDir));
 
