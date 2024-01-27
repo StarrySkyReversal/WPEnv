@@ -88,6 +88,15 @@ void SetCurlComponent(const char* url, DownloadPart* part, curl_slist* headers) 
 }
 
 DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
+	EnterCriticalSection(&progressCriticalSection);
+	if (numLockFlow >= numLockFlowMax) {
+		LeaveCriticalSection(&progressCriticalSection);
+		return 0;
+	}
+
+	numLockFlow += numSubPartSize;
+	LeaveCriticalSection(&progressCriticalSection);
+
 	DownloadPart** partGroup = (DownloadPart**)param;
 	//ULONGLONG uTmp = GetTickCount64();
 
@@ -116,8 +125,16 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 
 	int still_running = 1;
 	do {
-		curl_multi_setopt(multi_handle, CURLMOPT_MAX_TOTAL_CONNECTIONS, 128);
-		curl_multi_setopt(multi_handle, CURLMOPT_MAX_HOST_CONNECTIONS, 128);
+		curl_multi_setopt(multi_handle, CURLMOPT_MAX_TOTAL_CONNECTIONS, numLockFlowMax);
+		curl_multi_setopt(multi_handle, CURLMOPT_MAX_HOST_CONNECTIONS, numLockFlowMax);
+
+		int numfds;
+		CURLMcode mc_wait = curl_multi_wait(multi_handle, NULL, 0, 100, &numfds);
+		if (mc_wait != CURLM_OK) {
+			numLockFlow -= numSubPartSize;
+			Log("curl_multi_wait failed with code %d\n", mc_wait);
+			break;
+		}
 
 		CURLMcode mc = curl_multi_perform(multi_handle, &still_running);
 
@@ -140,6 +157,9 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 							LeaveCriticalSection(&progressCriticalSection);
 
 							partGroup[i]->statusCode = 0;
+						}
+						else {
+							partGroup[i]->status = 1;
 						}
 
 						EnterCriticalSection(&progressCriticalSection);

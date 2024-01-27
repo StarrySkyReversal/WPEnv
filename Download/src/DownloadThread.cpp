@@ -27,7 +27,7 @@ int numDynamicSubPartSize = 0;
 int abnormalCount = 0;
 int abnormalCloseThreadCount = 0;
 int numLockFlow = 0;
-int numLockFlowMax = 16;
+int numLockFlowMax = 0;
 
 bool bStartMonitor = false;
 
@@ -118,6 +118,7 @@ DWORD WINAPI DaemonMonitorThread(LPVOID param) {
             EnterCriticalSection(&progressCriticalSection);
             if (abnormalCount > 0) {
                 numLockFlowMax -= abnormalCount * 2;
+
                 abnormalCount = 0;
             }
             else {
@@ -142,16 +143,6 @@ DWORD WINAPI DaemonDownloadThread(LPVOID param) {
     int threadIndex = *((int*)param);
 
     while (true) {
-        EnterCriticalSection(&progressCriticalSection);
-        if (threadManager[threadIndex]->status == -1) {  // advance break
-            Log("Abnormal advance break; index:%d;\r\n", threadIndex);
-
-            threadManager[threadIndex]->status = 0;
-            LeaveCriticalSection(&progressCriticalSection);
-            break;
-        }
-        LeaveCriticalSection(&progressCriticalSection);
-
         if (isDone()) {
             Log("DaemonDownloadThread exit index: %d\r\n", threadIndex);
             break;
@@ -168,8 +159,6 @@ DWORD WINAPI DaemonDownloadThread(LPVOID param) {
 
             DownloadPart tempPart;
             if (dequeue(workerQueueArray, &tempPart)) {
-                numLockFlow += 1;
-
                 int tempSize = (counterSizeOrIndex + 1);
                 partGroup = (DownloadPart**)realloc(partGroup, tempSize * sizeof(DownloadPart*));
 
@@ -188,8 +177,6 @@ DWORD WINAPI DaemonDownloadThread(LPVOID param) {
         if (counterSizeOrIndex > 0) {
             CurlMultipleDownloadThread(partGroup, counterSizeOrIndex);
 
-            //SetEvent(hEvent);
-
             for (int i = 0; i < counterSizeOrIndex; i++) {
                 if (partGroup[i]->status == -1) {
                     EnterCriticalSection(&progressCriticalSection);
@@ -203,6 +190,8 @@ DWORD WINAPI DaemonDownloadThread(LPVOID param) {
         }
 
         free(partGroup);
+
+        Sleep(100);
     }
 
     free(param);
@@ -337,19 +326,6 @@ bool UnzipFile(SoftwareInfo* pSoftwareInfo) {
         return false;
     }
 
-    //if (wcscmp(pSoftwareInfo->serviceType, L"apache") == 0) {
-
-    //    //InitializeApacheConfigFile(*pSoftwareInfo);
-    //}
-
-    //if (wcscmp(pSoftwareInfo->serviceType, L"php") == 0) {
-    //    //syncPHPConfigFile(*pSoftwareInfo);
-    //}
-
-    //if (wcscmp(pSoftwareInfo->serviceType, L"nginx") == 0) {
-    //    //InitializeNginxConfigFile(*pSoftwareInfo);
-    //}
-
     return true;
 }
 
@@ -375,7 +351,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
 
     int totalPartSize = 32;
     downlodedTotalSize = 0;
-    numDynamicSubPartSize = 16;
+    numDynamicSubPartSize = 2;
 
     //abnormalCloseThreadCount = 0;       // Count of threads exiting due to exception
     abnormalCount = 0;
@@ -384,7 +360,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
     bStartMonitor = false;
 
     numLockFlow = 0;
-    numLockFlowMax = 8;
+    numLockFlowMax = 32;
 
     if (!DirectoryExists(DIRECTORY_DOWNLOAD)) {
         CreateDirectoryA(DIRECTORY_DOWNLOAD, NULL);
