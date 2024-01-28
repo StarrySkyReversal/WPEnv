@@ -2,6 +2,7 @@
 #include "WindowLayout.h"
 #include "ListBoxControls.h"
 #include "BaseFileOpt.h"
+#include "stdio.h"
 
 #include <commctrl.h>
 
@@ -25,11 +26,24 @@ LRESULT CALLBACK SubclassedListBoxProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
                 break;
             }
 
-            bool isDisabled = !(IsWindowEnabled(pDIS->hwndItem));
+            char* wProgramDirectory = get_current_program_directory_with_forward_slash();
 
-            FileList* fileList = NULL;
-            bool bFileExists = CheckDownloadFileExists(buffer, &fileList);
-            FreeCheckDownloadFileExists(fileList);
+            char serviceDir[256];
+            if (pDIS->hwndItem == hListPHP) {
+                sprintf_s(serviceDir, sizeof(serviceDir), "%s/service/php/%s", wProgramDirectory, buffer);
+            }
+            else if (pDIS->hwndItem == hListMySQL) {
+                sprintf_s(serviceDir, sizeof(serviceDir), "%s/service/mysql/%s", wProgramDirectory, buffer);
+            }
+            else if (pDIS->hwndItem == hListApache) {
+                sprintf_s(serviceDir, sizeof(serviceDir), "%s/service/apache/%s", wProgramDirectory, buffer);
+            }
+            else if (pDIS->hwndItem == hListNginx) {
+                sprintf_s(serviceDir, sizeof(serviceDir), "%s/service/nginx/%s", wProgramDirectory, buffer);
+            }
+
+            bool isDisabled = !(IsWindowEnabled(pDIS->hwndItem));
+            bool serviceDirExists = DirectoryExists(serviceDir);
 
             if (isDisabled) {
                 SetTextColor(hdc, RGB(160, 160, 160));
@@ -42,7 +56,7 @@ LRESULT CALLBACK SubclassedListBoxProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             }
             else
             {
-                if (bFileExists) {
+                if (serviceDirExists) {
                     SetTextColor(hdc, RGB(34, 139, 34));
                     SetBkColor(hdc, RGB(212, 244, 215));
                 }
