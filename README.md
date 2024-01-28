@@ -27,6 +27,26 @@ These URLs are customizable and can be modified as needed.
 - The TS version is optimized for running in a threaded environment, which is how Apache operates.
 - Nginx, however, typically works with PHP in a FastCGI setup, where the NTS (Non-Thread Safe) version is more efficient due to its design for non-threaded environments.
 
+## PHP Version and Visual C++ Dependency
+
+### Understanding PHP Version Suffixes
+- PHP versions are often followed by suffixes like `vs16`, `vc15`, `vc14`, or `vc11`. These refer to the version of Visual C++ compilers used to build that PHP version. It's crucial to have the corresponding Visual C++ runtime libraries installed on your system to run PHP smoothly.
+
+### Required Visual C++ Runtimes
+- **vs16:** Requires Microsoft Visual C++ Redistributable for Visual Studio 2019.
+- **vc15:** Requires Microsoft Visual C++ Redistributable for Visual Studio 2017.
+- **vc14:** Requires Microsoft Visual C++ Redistributable for Visual Studio 2015.
+- **vc11:** Requires Microsoft Visual C++ Redistributable for Visual Studio 2012.
+
+Ensure that you install the appropriate Visual C++ Redistributable version corresponding to the PHP version you are using. This is essential for the proper functioning of PHP on your system.
+
+### Understanding Architecture Suffixes in PHP Downloads
+- PHP package filenames often end with `x64` or `x32` suffixes. These indicate the architecture compatibility of the PHP version.
+
+### Choosing the Right Architecture
+- **x64:** Stands for 64-bit architecture. Choose this version if you are running a 64-bit operating system. This version can handle larger amounts of memory and is typically more efficient on modern hardware.
+- **x32:** Refers to 32-bit architecture (also known as x86). Choose this version if you are running a 32-bit operating system. It's compatible with older hardware and systems with less memory.
+
 ## Extensions
 Dependencies(vcpkg)
 
