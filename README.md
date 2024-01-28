@@ -47,16 +47,17 @@ Ensure that you install the appropriate Visual C++ Redistributable version corre
 - **x64:** Stands for 64-bit architecture. Choose this version if you are running a 64-bit operating system. This version can handle larger amounts of memory and is typically more efficient on modern hardware.
 - **x32:** Refers to 32-bit architecture (also known as x86). Choose this version if you are running a 32-bit operating system. It's compatible with older hardware and systems with less memory.
 
-## Extensions
-Dependencies(vcpkg)
-
-curl:x64-windows  
-jansson:x64-windows  
-minizip:x64-windows  
-openssl:x64-windows  
-
 ## Application UI
 ![Example Image](application_ui.jpg)
+
+## Required Dependencies
+
+For development, you need to install the following packages with vcpkg:
+
+- curl:x64-windows
+- jansson:x64-windows
+- minizip:x64-windows
+- openssl:x64-windows
 
 ## License
 This project is licensed under the MIT License. See the LICENSE.md file for details.
