@@ -2,7 +2,14 @@
 
 This project provides an integrated software solution for setting up PHP, MySQL, NGINX, and Apache on Windows, developed using Visual Studio 2022.
 
-System environment windows11
+The environment for developing this program is Windows 11, It has not yet been tested for running on Windows 10 or Windows 7 systems.
+
+## About Use
+The program comes with Apache httpd 2.4.58 and nginx 1.24.0 pre-installed.
+For PHP and MySQL, manual downloading is required due to their large package sizes.
+This can be done by clicking a specific download button within the program.
+The download URLs for PHP and MySQL are found in the 'config/service_source.txt' file in the program's root directory.
+These URLs are customizable and can be modified as needed.
 
 ## Extensions
 Dependencies(vcpkg)
