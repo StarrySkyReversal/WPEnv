@@ -202,7 +202,8 @@ int extract_zip_file(const char* zipFilename, const char* serviceType, const cha
 
         while (rename(oldPath, versionDirectory) != 0) {
             if (errno == EACCES) {
-                Sleep(10);
+                Log("Compression file error, permission issue can't be opened at the moment, retrying now.\r\n");
+                Sleep(100);
                 continue;
             }
         }
