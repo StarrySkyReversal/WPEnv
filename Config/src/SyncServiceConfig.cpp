@@ -32,7 +32,7 @@ DWORD phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* 
 		) {
 		sprintf_s(dllFilePath, sizeof(dllFilePath), "%s/php8apache2_4.dll", serviceVersionDir);
 		if (_access_s(dllFilePath, 0) != 0) {
-			MessageBoxA(NULL, "Please select from the list and download the PHP version with the 'ts' (Thread Safe) flag to get the missing 'php8apache2_4.dll' file.", NULL, 0);
+			MessageBoxA(hWndMain, "Please select from the list and download the PHP version with the 'ts' (Thread Safe) flag to get the missing 'php8apache2_4.dll' file.", "WPEnv", MB_ICONINFORMATION);
 			return -1;
 		}
 		sprintf_s(result, bufferSize, "LoadModule php_module \"%s\"", dllFilePath);
@@ -45,7 +45,7 @@ DWORD phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* 
 		) {
 		sprintf_s(dllFilePath, sizeof(dllFilePath), "%s/php7apache2_4.dll", serviceVersionDir);
 		if (_access_s(dllFilePath, 0) != 0) {
-			MessageBoxA(NULL, "Please select from the list and download the PHP version with the 'ts' (Thread Safe) flag to get the missing 'php7apache2_4.dll' file.", NULL, 0);
+			MessageBoxA(hWndMain, "Please select from the list and download the PHP version with the 'ts' (Thread Safe) flag to get the missing 'php7apache2_4.dll' file.", "WPEnv", MB_ICONINFORMATION);
 			return -1;
 		}
 		sprintf_s(result, bufferSize, "LoadModule php7_module \"%s\"", dllFilePath);
@@ -56,7 +56,7 @@ DWORD phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* 
 		) {
 		sprintf_s(dllFilePath, sizeof(dllFilePath), "%s/php5apache2_4.dll", serviceVersionDir);
 		if (_access_s(dllFilePath, 0) != 0) {
-			MessageBoxA(NULL, "Please select from the list and download the PHP version with the 'ts' (Thread Safe) flag to get the missing 'php5apache2_4.dll' file.", NULL, 0);
+			MessageBoxA(hWndMain, "Please select from the list and download the PHP version with the 'ts' (Thread Safe) flag to get the missing 'php5apache2_4.dll' file.", "WPEnv", MB_ICONINFORMATION);
 			return -1;
 		}
 		sprintf_s(result, bufferSize, "LoadModule php5_module \"%s\"", dllFilePath);
@@ -64,7 +64,7 @@ DWORD phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* 
 	else {
 		strncpy_s(result, bufferSize, "", _TRUNCATE);
 
-		MessageBoxA(NULL, "The httpd service did not find the corresponding php version.", NULL, 0);
+		MessageBoxA(hWndMain, "The httpd service did not find the corresponding php version.", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 
@@ -84,20 +84,20 @@ DWORD versionMatch(const char* serviceType, const char* fileTagVersion, const ch
 	char sourceFilename[256];
 	sprintf_s(sourceFilename, sizeof(sourceFilename), "%s/repository/%s/%s.txt", wProgramDirectory, serviceType, fileTagVersion);
 	if (_access_s(sourceFilename, 0) != 0) {
-		MessageBoxA(NULL, "The repository txt file does not exist, please rebuild the project.", NULL, 0);
+		MessageBoxA(hWndMain, "The repository txt file does not exist, please rebuild the project.", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 	errno_t err;
 
 	err = fopen_s(&sourceFile, sourceFilename, "rb");
 	if (err != 0) {
-		MessageBoxA(NULL, "The repository directory does not exist, please rebuild the project.", NULL, 0);
+		MessageBoxA(hWndMain, "The repository directory does not exist, please rebuild the project.", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 
 	err = fopen_s(&newFile, targetFilepath, "wb");
 	if (err != 0) {
-		MessageBoxA(NULL, "Target file does not exist, please download it first", NULL, 0);
+		MessageBoxA(hWndMain, "Target file does not exist, please download it first", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 
@@ -193,44 +193,60 @@ DWORD versionMatch(const char* serviceType, const char* fileTagVersion, const ch
 	return 0;
 }
 
-DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
-	char* wProgramDirectory = get_current_program_directory_with_forward_slash();
-
-	if (
-		!(
-			(softwareGroupInfo.php.version != NULL && softwareGroupInfo.mysql.version != NULL && softwareGroupInfo.apache.version != NULL) ||
-			(softwareGroupInfo.php.version != NULL && softwareGroupInfo.mysql.version != NULL && softwareGroupInfo.nginx.version != NULL)
-			)
-		) {
-		MessageBoxA(NULL, "Please select the correct configuration item", NULL, 0);
-		return -1;
-	}
-
+void InstallDefaultService(char* wProgramDirectory) {
 	// Determine if the default package is unpacked
 	char apacheDir[512];
 	sprintf_s(apacheDir, sizeof(apacheDir), "%s/service/apache", wProgramDirectory);
 	char nginxDir[512];
 	sprintf_s(nginxDir, sizeof(nginxDir), "%s/service/nginx", wProgramDirectory);
 
-	char defaultApacheVersionDir[512];
+	char defaultApacheVersionDir_x64[512];
+	char defaultApacheVersionDir_x86[512];
 	char defaultNginxVersionDir[512];
-	sprintf_s(defaultApacheVersionDir, sizeof(defaultApacheVersionDir), "%s/httpd-2.4.58", apacheDir);
+	sprintf_s(defaultApacheVersionDir_x64, sizeof(defaultApacheVersionDir_x64), "%s/httpd-2.4.58_vs17-x64", apacheDir);
+	sprintf_s(defaultApacheVersionDir_x86, sizeof(defaultApacheVersionDir_x86), "%s/httpd-2.4.58_vs17-x86", apacheDir);
 	sprintf_s(defaultNginxVersionDir, sizeof(defaultNginxVersionDir), "%s/nginx-1.24.0", nginxDir);
 
-	char defaultApacheFile[512];
+	char defaultApacheFile_x64[512];
+	char defaultApacheFile_x86[512];
 	char defaultNginxFile[512];
-	sprintf_s(defaultApacheFile, sizeof(defaultApacheFile), "%s/downloads/httpd-2.4.58.zip", wProgramDirectory);
+	sprintf_s(defaultApacheFile_x64, sizeof(defaultApacheFile_x64), "%s/downloads/httpd-2.4.58_vs17-x64.zip", wProgramDirectory);
+	sprintf_s(defaultApacheFile_x86, sizeof(defaultApacheFile_x86), "%s/downloads/httpd-2.4.58_vs17-x86.zip", wProgramDirectory);
 	sprintf_s(defaultNginxFile, sizeof(defaultNginxFile), "%s/downloads/nginx-1.24.0.zip", wProgramDirectory);
 
-
-	if (!DirectoryExists(defaultApacheVersionDir)) {
-		extract_zip_file(defaultApacheFile, "apache", "httpd-2.4.58");
+	if (_access(defaultApacheFile_x64, 0) == 0) {
+		if (!DirectoryExists(defaultApacheVersionDir_x64)) {
+			extract_zip_file(defaultApacheFile_x64, "apache", "httpd-2.4.58_vs17-x64");
+		}
 	}
 
-
-	if (!DirectoryExists(defaultNginxVersionDir)) {
-		extract_zip_file(defaultNginxFile, "nginx", "nginx-1.24.0");
+	if (_access(defaultApacheFile_x86, 0) == 0) {
+		if (!DirectoryExists(defaultApacheVersionDir_x86)) {
+			extract_zip_file(defaultApacheFile_x86, "apache", "httpd-2.4.58_vs17-x86");
+		}
 	}
+
+	if (_access(defaultNginxFile, 0) == 0) {
+		if (!DirectoryExists(defaultNginxVersionDir)) {
+			extract_zip_file(defaultNginxFile, "nginx", "nginx-1.24.0");
+		}
+	}
+}
+
+DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
+	if (
+		!(
+			(softwareGroupInfo.php.version != NULL && softwareGroupInfo.mysql.version != NULL && softwareGroupInfo.apache.version != NULL) ||
+			(softwareGroupInfo.php.version != NULL && softwareGroupInfo.mysql.version != NULL && softwareGroupInfo.nginx.version != NULL)
+			)
+		) {
+		MessageBoxA(hWndMain, "Please select the correct configuration item", "WPEnv", MB_ICONINFORMATION);
+		return -1;
+	}
+
+	char* wProgramDirectory = get_current_program_directory_with_forward_slash();
+
+	InstallDefaultService(wProgramDirectory);
 
 	char webDir[256];
 	sprintf_s(webDir, sizeof(webDir), "%s/www", wProgramDirectory);
@@ -279,7 +295,7 @@ DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 		// apache
 		char httpdConfPath[256];
 		sprintf_s(httpdConfPath, sizeof(httpdConfPath), "%s/service/apache/%s/Apache24/conf/httpd.conf", wProgramDirectory, softwareGroupInfo.apache.version);
-		if (versionMatch("apache", softwareGroupInfo.apache.version, httpdConfPath, softwareGroupInfo) != 0) {
+		if (versionMatch("apache", softwareGroupInfo.apache.versionNumber, httpdConfPath, softwareGroupInfo) != 0) {
 			return -1;
 		}
 
@@ -310,7 +326,7 @@ DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 			else {
 				Log("nginxVhostsDir create fail.");
 				// Folder create fail
-				MessageBoxA(NULL, "Nginx Folder create fail", NULL, 0);
+				MessageBoxA(hWndMain, "Nginx Folder create fail", "WPEnv", MB_ICONINFORMATION);
 				return -1;
 			}
 		}
@@ -345,13 +361,13 @@ DWORD SyncPHPAndApacheConf(SoftwareGroupInfo softwareGroupInfo, ServiceUseConfig
 
 	err = fopen_s(&sourceFile, sourcePath, "rb+");
 	if (err != 0) {
-		MessageBoxA(NULL, "Switching php version apache configuration did not synchronize successfully, please exit the apache configuration file being edited.", NULL, 0);
+		MessageBoxA(hWndMain, "Switching php version apache configuration did not synchronize successfully, please exit the apache configuration file being edited.", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 
 	err = fopen_s(&newFile, tempPath, "wb+");
 	if (err != 0) {
-		MessageBoxA(NULL, "Switching the php version of apache configuration did not synchronize successfully, create file failed.", NULL, 0);
+		MessageBoxA(hWndMain, "Switching the php version of apache configuration did not synchronize successfully, create file failed.", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 
@@ -392,12 +408,12 @@ DWORD SyncPHPAndApacheConf(SoftwareGroupInfo softwareGroupInfo, ServiceUseConfig
 		char errorMsg[256];
 		strerror_s(errorMsg, sizeof(errorMsg), errno);
 
-		MessageBoxA(NULL, "Switching the php version of apache configuration did not synchronize successfully, temp file create failed.", NULL, 0);
+		MessageBoxA(hWndMain, "Switching the php version of apache configuration did not synchronize successfully, temp file create failed.", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 
-	if (versionMatch("apache", softwareGroupInfo.apache.version, sourcePath, softwareGroupInfo) != 0) {
-		MessageBoxA(NULL, "Switching the php version of apache configuration did not synchronize successfully, sync new file content failed.", NULL, 0);
+	if (versionMatch("apache", softwareGroupInfo.apache.versionNumber, sourcePath, softwareGroupInfo) != 0) {
+		MessageBoxA(hWndMain, "Switching the php version of apache configuration did not synchronize successfully, sync new file content failed.", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 

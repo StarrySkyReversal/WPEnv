@@ -582,7 +582,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
             UnzipFile(pSoftwareInfo);
         }
         else {
-            MessageBoxA(NULL, "Failed to merge and decompress files after downloading", NULL, 0);
+            MessageBoxA(hWndMain, "Failed to merge and decompress files after downloading", "WPEnv", MB_ICONINFORMATION);
         }
     }
     else {

@@ -129,7 +129,7 @@ DWORD MergeFiles(const char* destination, const char* parts[], int num_parts) {
     }
 
     int attempts = 0;
-    int max_attempts = 20;
+    int max_attempts = 100;
 
     for (int i = 0; i < num_parts; i++) {
         if (CheckFileExists(parts[i])) {
@@ -139,7 +139,7 @@ DWORD MergeFiles(const char* destination, const char* parts[], int num_parts) {
                 Log("Attempt %d ,Error opening part file, msg: %s\r\n", attempts, err_buffer);
                 attempts++;
 
-                Sleep(100);
+                Sleep(500);
             }
 
             if (!part_file) {

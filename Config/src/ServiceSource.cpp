@@ -173,7 +173,8 @@ void InitializeServiceSource() {
         {"mysql-5.7.43":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.43-winx64.zip"}
     ],
     "apache": [
-        {"httpd-2.4.58":"https://www.apachelounge.com/download/VS17/binaries/httpd-2.4.58-win64-VS17.zip"}
+        {"httpd-2.4.58_vs17-x64":"https://www.apachelounge.com/download/VS17/binaries/httpd-2.4.58-win64-VS17.zip"},
+        {"httpd-2.4.58_vs17-x86":"https://www.apachelounge.com/download/vs17/binaries/httpd-2.4.58-win32-vs17.zip"}
     ],
     "nginx": [
         {"nginx-1.24.0":"http://nginx.org/download/nginx-1.24.0.zip"}

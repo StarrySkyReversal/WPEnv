@@ -79,7 +79,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // TODO: Place code here.
     hMutex = CreateMutex(NULL, FALSE, L"UniqueMutexName");
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        MessageBox(NULL, L"Program is running", L"Error", MB_ICONERROR);
+        MessageBox(NULL, L"Program is running", L"Error", MB_ICONINFORMATION);
         CloseHandle(hMutex);
         hMutex = NULL;
         return 1;
