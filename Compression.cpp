@@ -8,7 +8,7 @@
 #include "Common.h"
 #include "Log.h"
 #include "BaseFileOpt.h"
-
+#include <errno.h>
 
 #define CHUNK_SIZE 4096  // You can adjust this based on your requirements.
 
@@ -199,7 +199,13 @@ int extract_zip_file(const char* zipFilename, const char* serviceType, const cha
         // Rename topLevel directory
         char oldPath[1024];
         sprintf_s(oldPath, "%s/%s", tempVersionDirectory, firstTopLevelItem);
-        rename(oldPath, versionDirectory);
+
+        while (rename(oldPath, versionDirectory) != 0) {
+            if (errno == EACCES) {
+                Sleep(10);
+                continue;
+            }
+        }
     }
     else {
         // Move all projects to new folder

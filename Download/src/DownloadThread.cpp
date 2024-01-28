@@ -23,7 +23,7 @@ unsigned long long totalSize;
 unsigned long long downlodedTotalSize = 0;
 
 int numDownloadThreadsSize = 0;
-int numDynamicSubPartSize = 0;
+int numThreadDispathPartSize = 0;
 int abnormalCount = 0;
 int abnormalCloseThreadCount = 0;
 int numLockFlow = 0;
@@ -152,7 +152,7 @@ DWORD WINAPI DaemonDownloadThread(LPVOID param) {
         DownloadPart** partGroup = (DownloadPart**)malloc(sizeof(DownloadPart*));
 
         EnterCriticalSection(&progressCriticalSection);
-        while (counterSizeOrIndex < numDynamicSubPartSize) {
+        while (counterSizeOrIndex < numThreadDispathPartSize) {
             if (numLockFlow >= numLockFlowMax) {
                 break;
             }
@@ -238,7 +238,7 @@ DWORD WINAPI ProgressThread(LPVOID param) {
         prevDownloadedTotalSize = downlodedTotalSize;
         LeaveCriticalSection(&progressCriticalSection);
 
-        Sleep(1000);
+        Sleep(500);
     }
 
     SetProgressBarPosition(0);
@@ -351,7 +351,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
 
     int totalPartSize = 32;
     downlodedTotalSize = 0;
-    numDynamicSubPartSize = 2;
+    numThreadDispathPartSize = 2;
 
     //abnormalCloseThreadCount = 0;       // Count of threads exiting due to exception
     abnormalCount = 0;
@@ -527,6 +527,18 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
 
     curl_global_cleanup();
 
+
+    DWORD exitCode;
+    for (int i = 0; i < numDownloadThreadsSize; i++) {
+        if (threadsArray[i]) {
+            if (GetExitCodeThread(threadsArray[i], &exitCode)) {
+                if (exitCode == STILL_ACTIVE) {
+                    CloseHandle(threadsArray[i]);
+                }
+            }
+        }
+    }
+
     const char** filepathPtrs = new const char* [totalPartSize]();
 
     // Check the integrity of the file block.
@@ -558,7 +570,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
 
     qsort(filepathPtrs, totalPartSize, sizeof(char*), compareFunc);
     for (int i = 0; i < totalPartSize; i++) {
-        Log("filename:%ls;\r\n",
+        Log("filename:%s;\r\n",
             filepathPtrs[i]);
     }
 
@@ -566,24 +578,15 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
         char fileFullNamePath[256];
         sprintf_s(fileFullNamePath, sizeof(fileFullNamePath), "%s/%s", DIRECTORY_DOWNLOAD, pSoftwareInfo->fileFullName);
 
-        MergeFiles(fileFullNamePath, filepathPtrs, totalPartSize);
+        if (MergeFiles(fileFullNamePath, filepathPtrs, totalPartSize) == 0) {
+            UnzipFile(pSoftwareInfo);
+        }
+        else {
+            MessageBoxA(NULL, "Failed to merge and decompress files after downloading", NULL, 0);
+        }
     }
     else {
         Log("File checkVerify error\r\n");
-    }
-
-    DWORD exitCode;
-    for (int i = 0; i < numDownloadThreadsSize; i++) {
-        if (threadsArray[i]) {
-            if (GetExitCodeThread(threadsArray[i], &exitCode)) {
-                if (exitCode == STILL_ACTIVE) {
-                    CloseHandle(threadsArray[i]);
-                }
-            }
-        }
-    }
-
-    if (UnzipFile(pSoftwareInfo)) {
     }
 
     free(threadsArray);

@@ -196,6 +196,16 @@ DWORD versionMatch(const char* serviceType, const char* fileTagVersion, const ch
 DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 	char* wProgramDirectory = get_current_program_directory_with_forward_slash();
 
+	if (
+		!(
+			(softwareGroupInfo.php.version != NULL && softwareGroupInfo.mysql.version != NULL && softwareGroupInfo.apache.version != NULL) ||
+			(softwareGroupInfo.php.version != NULL && softwareGroupInfo.mysql.version != NULL && softwareGroupInfo.nginx.version != NULL)
+			)
+		) {
+		MessageBoxA(NULL, "Please select the correct configuration item", NULL, 0);
+		return -1;
+	}
+
 	// Determine if the default package is unpacked
 	char apacheDir[512];
 	sprintf_s(apacheDir, sizeof(apacheDir), "%s/service/apache", wProgramDirectory);

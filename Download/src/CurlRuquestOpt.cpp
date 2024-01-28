@@ -24,7 +24,7 @@ size_t subpart_write_data(void* buffer, size_t size, size_t nmemb, void* userp) 
 	DownloadPart* part = (DownloadPart*)userp;
 
 	if (part->statusCode != 206) {
-		//Log("file:%ls; nmemb:%llu; currentBytes:%llu;totalBytes:%llu; statusCode:%d\r\n",
+		//Log("file:%s; nmemb:%llu; currentBytes:%llu;totalBytes:%llu; statusCode:%d\r\n",
 		//	part->filename, nmemb, part->currentStartByte, part->totalBytesLength, part->statusCode);
 		return 0;
 	}
@@ -116,6 +116,7 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 
 		//Log("timestamp: %llu;count_filename:%ls\r\n", partGroup[i]->timestamp, partGroup[i]->filepath);
 		if (fopen_s(&partGroup[i]->file, partGroup[i]->filepath, "ab")) {  // ab
+			partGroup[i]->status = -1;
 			Log("timestamp: %llu;Failed to open file: %s errorCode:%d\r\n", partGroup[i]->timestamp, partGroup[i]->filepath, GetLastError());
 			break;
 		}

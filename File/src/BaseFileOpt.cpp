@@ -1,6 +1,8 @@
 #include "framework.h"
 #include "BaseFileOpt.h"
 #include <stdio.h>
+#include "Log.h"
+#include <errno.h>
 
 FileList* ListFiles(const char* directory) {
     WIN32_FIND_DATAA findFileData;
@@ -116,23 +118,37 @@ const char* GetFileFullNameFromUrl(const char* filename, const char* url) {
     return fullFileName;
 }
 
-void MergeFiles(const char* destination, const char* parts[], int num_parts) {
+DWORD MergeFiles(const char* destination, const char* parts[], int num_parts) {
     FILE* dest_file;
+    errno_t err;
+    char err_buffer[512];
     fopen_s(&dest_file, destination, "wb");
     if (!dest_file) {
-        perror("Error opening destination file");
-        return;
+        Log("Error opening destination file");
+        return -1;
     }
+
+    int attempts = 0;
+    int max_attempts = 20;
 
     for (int i = 0; i < num_parts; i++) {
         if (CheckFileExists(parts[i])) {
             FILE* part_file;
-            fopen_s(&part_file, parts[i], "rb");
+            while ((err = fopen_s(&part_file, parts[i], "rb")) != 0 && attempts < max_attempts) {
+                strerror_s(err_buffer, sizeof(err_buffer), err);
+                Log("Attempt %d ,Error opening part file, msg: %s\r\n", attempts, err_buffer);
+                attempts++;
+
+                Sleep(100);
+            }
 
             if (!part_file) {
-                perror("Error opening part file");
+                Log("Error opening part file unknown error\r\n");
                 fclose(dest_file);
-                return;
+
+                // Delete zip files that failed to execute
+                remove(destination);
+                return -1;
             }
 
             char buffer[4096];
@@ -148,6 +164,8 @@ void MergeFiles(const char* destination, const char* parts[], int num_parts) {
     }
 
     fclose(dest_file);
+
+    return 0;
 }
 
 void GetDirectoryFromPath(const char* fullPath, char* directory, size_t directorySize, bool getParent) {

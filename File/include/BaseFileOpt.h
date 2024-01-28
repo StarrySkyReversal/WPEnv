@@ -15,7 +15,7 @@ void FreeCheckDownloadFileExists(FileList* fileList);
 
 BOOL DirectoryExists(const char* dirName);
 const char* GetFileFullNameFromUrl(const char* filename, const char* url);
-void MergeFiles(const char* destination, const char* parts[], int num_parts);
+DWORD MergeFiles(const char* destination, const char* parts[], int num_parts);
 
 void GetDirectoryFromPath(const char* fullPath, char* directory, size_t directorySize, bool getParent = false);
 

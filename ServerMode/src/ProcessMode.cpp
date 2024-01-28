@@ -20,23 +20,49 @@ bool bMysqlRunning = false;
 bool bApacheRunning = false;
 bool bNginxRunning = false;
 
-struct ProcessPipe {
+#define PIPE_STATUS_RUNNING 1
+#define PIPE_STATUS_EXIT 0
+
+typedef struct {
     HANDLE hRead;
     HANDLE hWrite;
-    HANDLE hProcess;
-    HANDLE hThread;
+    int status;
     const char* processName;
-    //HANDLE hThread;
-};
+} ProcessPipe;
 
-struct ProcessDetail {
+typedef struct {
     const char* cmd;
     const char* dir;
     const char* processName;
     const char* serviceName;
-    ProcessPipe pipe;
+    ProcessPipe* pipe;
     PROCESS_INFORMATION pi;
+} ProcessDetail;
+
+
+struct WebDaemonService {
+    bool bRun;
+
+    const char* phpExe;
+    const char* phpExePath;
+    const char* phpExeDirectory;
+
+    const char* mysqldExe;
+    const char* mysqldExePath;
+    const char* mysqldExeDirectory;
+
+    const char* webServiceExe;
+    const char* webServiceExePath;
+    const char* webServiceExeDirectory;
 };
+
+WebDaemonService webDaemonServiceInstance;
+
+ProcessDetail* pPhpProcessDetail = nullptr;
+ProcessDetail* pMysqlProcessDetail = nullptr;
+ProcessDetail* pMysqlClientProcessDetail = nullptr;
+ProcessDetail* pMysqlInitProcessDetail = nullptr;
+ProcessDetail* pWebServiceProcessDetail = nullptr;
 
 int EndsWithNewline(const char* str) {
     size_t len = strlen(str);
@@ -52,41 +78,44 @@ int EndsWithNewline(const char* str) {
     return 0;
 }
 
-DWORD ReadFromPipeThread(LPVOID lpParam) {
+DWORD WINAPI ReadFromPipeThread(LPVOID lpParam) {
     ProcessPipe* processPipe = (ProcessPipe*)lpParam;
 
+    DWORD availableBytes = 0;
     while (true) {
-        DWORD availableBytes = 0;
-        if (!PeekNamedPipe(processPipe->hRead, NULL, 0, NULL, &availableBytes, NULL)) {
-            Log("PeekNamedPipe failed with error: %d\r\n", GetLastError());
+        PeekNamedPipe(processPipe->hRead, NULL, 0, NULL, &availableBytes, NULL);
+        if (processPipe->status == PIPE_STATUS_EXIT) {
+            Log("Pipe %s exit.\r\n", processPipe->processName);
             break;
         }
 
-        if (availableBytes == 0) {
-            Sleep(100);  // Wait a bit before checking again
-            continue;
-        }
-
-        DWORD bytesRead = 0;
-        char buffer[65535] = { '\0' };
-        if (ReadFile(processPipe->hRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL)) {
+        // It is essential to add judgment behavior here, otherwise it will lead to read-end blocking,
+        // causing the execution of this line of code to end without any warning. Moreover, if a breakpoint is set here,
+        // the 'step over' operation will not be able to proceed.
+        if (availableBytes > 0) {
+            DWORD bytesRead = 0;
+            char buffer[65535] = { '\0' };
+            ReadFile(processPipe->hRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL);
             buffer[bytesRead] = '\0';
 
             char wOutputBuffer[65525];
             sprintf_s(wOutputBuffer, sizeof(wOutputBuffer), "INFO: Create process %s result: %s \r\n", processPipe->processName, buffer);
 
             AppendEditInfo(wOutputBuffer);
-            //AppendEditInfo(wBuffer);
 
             if (!EndsWithNewline(buffer)) {
                 AppendEditInfo("\r\n");
             }
         }
+
+        Sleep(100);
     }
 
-    //CloseHandle(processPipe->hRead);  // Close the handle once you are done reading
+    CloseHandle(processPipe->hRead);
+    CloseHandle(processPipe->hWrite);
 
-    //delete processPipe;
+    delete processPipe;
+
     return 0;
 }
 
@@ -164,53 +193,21 @@ bool CalllCreateProcess(ProcessDetail* pProcessDetail, bool waitProcess = false)
         CloseHandle(hJob);
     }
 
-    pProcessDetail->pipe.hRead = hRead;
-    pProcessDetail->pipe.hProcess = pProcessDetail->pi.hProcess;
-    pProcessDetail->pipe.processName = pProcessDetail->processName;
+    pProcessDetail->pipe = new ProcessPipe();
+    pProcessDetail->pipe->hRead = hRead;
+    pProcessDetail->pipe->hWrite = hWrite;
+    pProcessDetail->pipe->status = PIPE_STATUS_RUNNING;
+    pProcessDetail->pipe->processName = pProcessDetail->processName;
 
-    HANDLE hThread = CreateThread(NULL, 0, ReadFromPipeThread, &pProcessDetail->pi, 0, NULL);
-    pProcessDetail->pipe.hThread = hThread;
-
-    //if (hThread) {
-    //    WaitForSingleObject(hThread, INFINITE);
-    //}
-
-    //if (hThread == NULL) {
-    //    free(wCmdStr);
-    //    Log("Failed to create thread.\r\n");
-    //    CloseHandle(hRead);
-    //}
-    //else {
-    //    CloseHandle(hThread);  // Close the thread handle if you don't need to reference it anymore
-    //}
+    HANDLE hThread = CreateThread(NULL, 0, ReadFromPipeThread, pProcessDetail->pipe, 0, NULL);
+    if (hThread) {
+        CloseHandle(hThread);
+    }
 
     free(wCmdStr);
 
     return true;
 }
-
-struct WebDaemonService {
-    bool bRun;
-
-    const char* phpExe;
-    const char* phpExePath;
-    const char* phpExeDirectory;
-
-    const char* mysqldExe;
-    const char* mysqldExePath;
-    const char* mysqldExeDirectory;
-
-    const char* webServiceExe;
-    const char* webServiceExePath;
-    const char* webServiceExeDirectory;
-};
-
-WebDaemonService webDaemonServiceInstance;
-
-ProcessDetail* pPhpProcessDetail = nullptr;
-ProcessDetail* pMysqlProcessDetail = nullptr;
-ProcessDetail* pMysqlClientProcessDetail = nullptr;
-ProcessDetail* pWebServiceProcessDetail = nullptr;
 
 DWORD phpProcess(ServiceUseConfig* serviceUse) {
     PathList* pathsPHP = initPathList();
@@ -324,7 +321,6 @@ DWORD mysqlServiceProcess(ServiceUseConfig* serviceUse, bool* bMysqlInit) {
         char mysqldCmdInitDataDirectory[1024] = { '\0' };
         sprintf_s(mysqldCmdInitDataDirectory, sizeof(mysqldCmdInitDataDirectory),
             "%s --initialize-insecure --explicit_defaults_for_timestamp --datadir=data", pathsMysql->paths[0]);
-        ProcessDetail* pMysqlInitProcessDetail = new ProcessDetail;
 
         pMysqlInitProcessDetail->processName = "mysqld.exe";
         pMysqlInitProcessDetail->cmd = mysqldCmdInitDataDirectory;
@@ -335,7 +331,6 @@ DWORD mysqlServiceProcess(ServiceUseConfig* serviceUse, bool* bMysqlInit) {
         else {
             AppendEditInfo("INFO: Mysql initialize fail.\r\n");
         }
-        delete pMysqlInitProcessDetail;
         ////////////////////////////////////////////////////////////////////////
     }
 
@@ -431,20 +426,34 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
         return 0;
     }
 
+    EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_START_SERVICE), FALSE);
+
     bIsStart = true;
 
     pPhpProcessDetail = new ProcessDetail;
     pPhpProcessDetail->cmd = NULL;
+
     pMysqlProcessDetail = new ProcessDetail;
     pMysqlProcessDetail->cmd = NULL;
+
     pMysqlClientProcessDetail = new ProcessDetail;
     pMysqlClientProcessDetail->cmd = NULL;
+
+    pMysqlInitProcessDetail = new ProcessDetail;
+    pMysqlInitProcessDetail->cmd = NULL;
+
     pWebServiceProcessDetail = new ProcessDetail;
+    pWebServiceProcessDetail->cmd = NULL;
+
+    webDaemonServiceInstance.phpExe = NULL;
+    webDaemonServiceInstance.mysqldExe = NULL;
+    webDaemonServiceInstance.webServiceExe = NULL;
 
     ServiceUseConfig* serviceUse = (ServiceUseConfig*)malloc(sizeof(ServiceUseConfig));
 
     if (!GetServiceUseItem(serviceUse)) {
         bIsStart = false;
+        EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_START_SERVICE), TRUE);
         return 1;
     }
 
@@ -471,7 +480,6 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
 
     webDaemonServiceInstance.bRun = true;
 
-    EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_START_SERVICE), FALSE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_REMOVE_CONFIG), FALSE);
 
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_STOP_SERVICE), TRUE);
@@ -486,17 +494,17 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
 }
 
 void freeWebDaemonServiceInstance(WebDaemonService* webDaemonService) {
-    if (webDaemonService->phpExePath != NULL) {
+    if (webDaemonService->phpExe != NULL) {
         free((void*)webDaemonService->phpExePath);
         free((void*)webDaemonService->phpExeDirectory);
     }
 
-    if (webDaemonService->mysqldExePath != NULL) {
+    if (webDaemonService->mysqldExe != NULL) {
         free((void*)webDaemonService->mysqldExePath);
         free((void*)webDaemonService->mysqldExeDirectory);
     }
 
-    if (webDaemonService->webServiceExePath != NULL) {
+    if (webDaemonService->webServiceExe != NULL) {
         free((void*)webDaemonService->webServiceExePath);
         free((void*)webDaemonService->webServiceExeDirectory);
     }
@@ -634,11 +642,9 @@ DWORD CallDeleteProcess(ProcessDetail pProcessDetail) {
 }
 
 void CloseDaemonService() {
-    if (webDaemonServiceInstance.bRun != true) {
+    if (webDaemonServiceInstance.bRun == false) {
         return;
     }
-
-    webDaemonServiceInstance.bRun = false;
 
     EnterCriticalSection(&daemonMonitorServiceCs);
 
@@ -698,28 +704,29 @@ void CloseDaemonService() {
     freeWebDaemonServiceInstance(&webDaemonServiceInstance);
 
     if (pPhpProcessDetail->cmd != NULL) {
-        CloseHandle(pPhpProcessDetail->pipe.hThread);
-        CloseHandle(pPhpProcessDetail->pipe.hRead);
+        pPhpProcessDetail->pipe->status = PIPE_STATUS_EXIT;
     }
 
     if (pMysqlProcessDetail->cmd != NULL) {
-        CloseHandle(pMysqlProcessDetail->pipe.hThread);
-        CloseHandle(pMysqlProcessDetail->pipe.hRead);
+        pMysqlProcessDetail->pipe->status = PIPE_STATUS_EXIT;
     }
 
     if (pMysqlClientProcessDetail->cmd != NULL) {
-        CloseHandle(pMysqlClientProcessDetail->pipe.hThread);
-        CloseHandle(pMysqlClientProcessDetail->pipe.hRead);
+        pMysqlClientProcessDetail->pipe->status = PIPE_STATUS_EXIT;
+    }
+
+    if (pMysqlInitProcessDetail->cmd != NULL) {
+        pMysqlInitProcessDetail->pipe->status = PIPE_STATUS_EXIT;
     }
 
     if (pWebServiceProcessDetail->cmd != NULL) {
-        CloseHandle(pWebServiceProcessDetail->pipe.hThread);
-        CloseHandle(pWebServiceProcessDetail->pipe.hRead);
+        pWebServiceProcessDetail->pipe->status = PIPE_STATUS_EXIT;
     }
 
     delete pPhpProcessDetail;
     delete pMysqlProcessDetail;
     delete pMysqlClientProcessDetail;
+    delete pMysqlInitProcessDetail;
     delete pWebServiceProcessDetail;
 
     LeaveCriticalSection(&daemonMonitorServiceCs);
@@ -729,6 +736,8 @@ void CloseDaemonService() {
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_START_SERVICE), TRUE);
     EnableWindow(GetDlgItem(hWndMain, IDC_LISTBOX_CONFIG), TRUE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_REMOVE_CONFIG), TRUE);
+
+    webDaemonServiceInstance.bRun = false;
 }
 
 void RestartDaemonService() {
