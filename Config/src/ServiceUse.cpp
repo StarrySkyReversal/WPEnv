@@ -192,7 +192,9 @@ bool AddNewConfig(SoftwareGroupInfo softwareGroupInfo) {
     AddListViewItem(hListConfig, itemIndex, 2, softwareGroupInfo.mysql.version);
     AddListViewItem(hListConfig, itemIndex, 3, service);
 
-    SetListViewFocus();
+    if (webDaemonServiceInstance.bRun == false) {
+        SetListViewFocus();
+    }
 
     return true;
 }

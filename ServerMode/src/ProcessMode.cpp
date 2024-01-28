@@ -39,23 +39,6 @@ typedef struct {
     PROCESS_INFORMATION pi;
 } ProcessDetail;
 
-
-struct WebDaemonService {
-    bool bRun;
-
-    const char* phpExe;
-    const char* phpExePath;
-    const char* phpExeDirectory;
-
-    const char* mysqldExe;
-    const char* mysqldExePath;
-    const char* mysqldExeDirectory;
-
-    const char* webServiceExe;
-    const char* webServiceExePath;
-    const char* webServiceExeDirectory;
-};
-
 WebDaemonService webDaemonServiceInstance;
 
 ProcessDetail* pPhpProcessDetail = nullptr;

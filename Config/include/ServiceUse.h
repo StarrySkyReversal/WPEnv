@@ -1,6 +1,9 @@
 #pragma once
 
 #include "ConfigHeader.h"
+#include "ProcessMode.h"
+
+extern WebDaemonService webDaemonServiceInstance;
 
 int ReadServiceUseConfig(const char* filePath, ServiceUseConfig* configs);
 int AddConfigToServiceUse(const char* filePath, const char* config);
