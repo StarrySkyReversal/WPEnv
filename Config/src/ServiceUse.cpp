@@ -16,7 +16,7 @@ ServiceUseConfig serviceUseConfigs[256] = { 0 };
 
 int ReadServiceUseConfig(const char* filePath, ServiceUseConfig* configs) {
     FILE* file;
-    fopen_s(&file, filePath, "r");
+    fopen_s(&file, filePath, "r+N");
     if (file == NULL) {
         return 0;
     }
@@ -50,7 +50,7 @@ int ReadServiceUseConfig(const char* filePath, ServiceUseConfig* configs) {
 
 int AddConfigToServiceUse(const char* filePath, const char* config) {
     FILE* file;
-    fopen_s(&file, filePath, "a");
+    fopen_s(&file, filePath, "a+N");
     if (file == NULL) {
         return 0;
     }
@@ -62,7 +62,7 @@ int AddConfigToServiceUse(const char* filePath, const char* config) {
 
 int RemoveServiceUseItem(const char* filePath, int itemIndex) {
     FILE* file;
-    if (fopen_s(&file, filePath, "r") != 0 || file == NULL) {
+    if (fopen_s(&file, filePath, "r+N") != 0 || file == NULL) {
         return 0;
     }
 
@@ -73,7 +73,7 @@ int RemoveServiceUseItem(const char* filePath, int itemIndex) {
     strcat_s(tempPath, sizeof(tempPath), ".tmp_webservice");  // Create a temporary filename
 
     FILE* tempFile;
-    if (fopen_s(&tempFile, tempPath, "w") != 0 || tempFile == NULL) {
+    if (fopen_s(&tempFile, tempPath, "w+N") != 0 || tempFile == NULL) {
         fclose(file);
         return 0;
     }

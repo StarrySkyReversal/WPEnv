@@ -117,16 +117,16 @@ DWORD WINAPI DaemonMonitorThread(LPVOID param) {
         if (bStartMonitor == true) {    // Start monitor thread state
             EnterCriticalSection(&progressCriticalSection);
             if (abnormalCount > 0) {
-                numLockFlowMax -= abnormalCount * 2;
+                numLockFlowMax -= 1;
 
                 abnormalCount = 0;
             }
             else {
-                numLockFlowMax += 2;    // only addition
+                numLockFlowMax += 1;    // only addition
             }
 
             if (numLockFlowMax < 8) numLockFlowMax = 8;
-            if (numLockFlowMax > 32) numLockFlowMax = 32;
+            if (numLockFlowMax > 64) numLockFlowMax = 64;
 
             Log("numLockFlowMax:%d\r\n", numLockFlowMax);
 
@@ -135,6 +135,8 @@ DWORD WINAPI DaemonMonitorThread(LPVOID param) {
 
         ResetEvent(hEvent);
     }
+
+    Log("DaemonMonitorThread exit.\r\n");
 
     return 0;
 }
@@ -178,10 +180,14 @@ DWORD WINAPI DaemonDownloadThread(LPVOID param) {
             CurlMultipleDownloadThread(partGroup, counterSizeOrIndex);
 
             for (int i = 0; i < counterSizeOrIndex; i++) {
-                if (partGroup[i]->status == -1) {
+
+                // -1 is a retry due to CURL failure
+                // 0 is a retry due to numLockFlowMax.
+                if (partGroup[i]->status == -1 || partGroup[i]->status == 0) {
                     EnterCriticalSection(&progressCriticalSection);
-                    partGroup[i]->status = 0;   // reset retry mark
-                    partGroup[i]->statusCode = -1;
+                    partGroup[i]->status = 0;   // Initialize status
+
+                    Log("File %s to try to re-download\r\n", partGroup[i]->filepath);
                     
                     enqueue(workerQueueArray, *partGroup[i]);
                     LeaveCriticalSection(&progressCriticalSection);
@@ -244,8 +250,8 @@ DWORD WINAPI ProgressThread(LPVOID param) {
     SetProgressBarPosition(0);
     UpdateStaticLabelInfo("");
 
-    sprintf_s(progressFinishMsg, sizeof(progressFinishMsg), "INFO: %s Download: %i%%\r\n", pSoftwareInfo->fileFullName, currentProgress);
-    AppendEditInfo(progressFinishMsg);
+    sprintf_s(progressFinishMsg, sizeof(progressFinishMsg), "%s Download: %i%%\r\n", pSoftwareInfo->fileFullName, currentProgress);
+    InfoOutput(progressFinishMsg);
 
     Log("ProgressBar finish\r\n");
     return 0;
@@ -294,14 +300,15 @@ bool UnzipFile(SoftwareInfo* pSoftwareInfo) {
     char unzipTempMsg[512] = { '\0' };
     int unzipResult = 0;
 
-    sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "INFO: Unpacking %s ...\r\n", pSoftwareInfo->fileFullName);
-    AppendEditInfo(unzipTempMsg);
+    sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "Unpacking %s ...\r\n", pSoftwareInfo->fileFullName);
+    InfoOutput(unzipTempMsg);
 
     sprintf_s(unzipZipFilePath, sizeof(unzipZipFilePath), "%s/%s", DIRECTORY_DOWNLOAD, pSoftwareInfo->fileFullName);
 
     unzipResult = extract_zip_file(unzipZipFilePath, pSoftwareInfo->serviceType, pSoftwareInfo->version);
     if (unzipResult == -1) {
-        Log(L"Failed to extract the file %s, please try downloading again.", pSoftwareInfo->version);
+        sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "Failed to extract the file %s, please try downloading again.\r\n", pSoftwareInfo->version);
+        WarnOutput(unzipTempMsg);
 
         DeleteFileA(unzipZipFilePath);
 
@@ -310,13 +317,13 @@ bool UnzipFile(SoftwareInfo* pSoftwareInfo) {
     else if (unzipResult == -3) {
         sprintf_s(unzipTempMsg, sizeof(unzipTempMsg),
             "The corresponding version folder already exists: %s/%s/%s\r\n", DIRECTORY_SERVICE, pSoftwareInfo->serviceType, pSoftwareInfo->version);
-        AppendEditInfo(unzipTempMsg);
+        WarnOutput(unzipTempMsg);
 
         return false;
     }
     else if (unzipResult == 0) {
-        sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "INFO: Unpacking %s complete\r\n", pSoftwareInfo->fileFullName);
-        AppendEditInfo(unzipTempMsg);
+        sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "Unpacking %s complete\r\n", pSoftwareInfo->fileFullName);
+        InfoOutput(unzipTempMsg);
 
     }
     else {
@@ -351,7 +358,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
 
     int totalPartSize = 32;
     downlodedTotalSize = 0;
-    numThreadDispathPartSize = 2;
+    numThreadDispathPartSize = 3;
 
     //abnormalCloseThreadCount = 0;       // Count of threads exiting due to exception
     abnormalCount = 0;
@@ -371,10 +378,9 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
 
     // Starting download soon
 
-    //AppendEditInfo(L"Starting download soon");
     char infoTip[256] = "\0";
-    sprintf_s(infoTip, sizeof(infoTip), "INFO: Initiating download of %s\r\n", pSoftwareInfo->version);
-    AppendEditInfo(infoTip);
+    sprintf_s(infoTip, sizeof(infoTip), "Initiating download of %s\r\n", pSoftwareInfo->version);
+    InfoOutput(infoTip);
     curl_global_init(CURL_GLOBAL_ALL);
     totalSize = CurlGetRemoteFileSize(pSoftwareInfo->link);
     curl_global_cleanup();
@@ -416,7 +422,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
 
         if (CheckFileExists(part->filepath)) {
             unsigned long long fileSize = 0;
-            GetFileSize(part->filepath, &fileSize);
+            GetTargetFileSize(part->filepath, &fileSize);
 
             downlodedTotalSize += fileSize;
             part->readBytes = fileSize;
@@ -429,13 +435,14 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
                 enqueue(workerQueueArray, *part);
             }
         } else {                                        // new
+            Log("____________%s\r\n", part->filepath);
             enqueue(workerQueueArray, *part);
         }
     }
 
     char startDownloadMsg[256];
-    sprintf_s(startDownloadMsg, sizeof(startDownloadMsg), "INFO: Target link %s\r\n", pSoftwareInfo->link);
-    AppendEditInfo(startDownloadMsg);
+    sprintf_s(startDownloadMsg, sizeof(startDownloadMsg), "Target link %s\r\n", pSoftwareInfo->link);
+    InfoOutput(startDownloadMsg);
 
     curl_global_init(CURL_GLOBAL_ALL);
 
@@ -557,7 +564,7 @@ DWORD WINAPI DownloadManagerThread(LPVOID param) {
         }
 
         ULONGLONG fileSizeValue = 0;
-        GetFileSize(globalPartGroup[i]->filepath, &fileSizeValue);
+        GetTargetFileSize(globalPartGroup[i]->filepath, &fileSizeValue);
         if (fileSizeValue != globalPartGroup[i]->totalBytesLength) {
             Log("file size error______readBytes:%llu;____totalBytes%llu;______:%ls \r\n\r\n",
                 globalPartGroup[i]->readBytes,

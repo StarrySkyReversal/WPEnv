@@ -3,6 +3,7 @@
 #include <comdef.h>
 #include <tlhelp32.h>
 #include "Log.h"
+#include "Common.h"
 
 BOOL ProcessIsRunning(const char* processName) {
     BOOL exists = FALSE;
@@ -11,12 +12,13 @@ BOOL ProcessIsRunning(const char* processName) {
 
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
+    char tempStr[512];
+
     if (Process32First(snapshot, &entry)) {
         while (Process32Next(snapshot, &entry)) {
-            size_t convertedChars = 0;
-            char buffer[512];
-            wcstombs_s(&convertedChars, buffer, sizeof(buffer), entry.szExeFile, _TRUNCATE);
-            if (!_stricmp(buffer, processName)) {
+
+            WToM(entry.szExeFile, tempStr, sizeof(tempStr));
+            if (!_stricmp(tempStr, processName)) {
                 exists = TRUE;
                 break;
             }
@@ -40,8 +42,12 @@ bool IsHttpdParentRunning(const char* processName) {
     bool exitLoop = false;  // New flag to control the outer loop
 
     BOOL hRes = Process32First(hSnapShot, &pEntry);
+
+    char tempStr[512];
+
     while (hRes && !exitLoop) {  // Added check for exitLoop flag here
-        if (strcmp((LPSTR)pEntry.szExeFile, processName) == 0) {
+        WToM(pEntry.szExeFile, tempStr, sizeof(tempStr));
+        if (strcmp(tempStr, processName) == 0) {
             DWORD parentId = pEntry.th32ParentProcessID;
 
             //Log("%ls _______ processId : %lu\r\n", processName, pEntry.th32ProcessID);
@@ -52,11 +58,9 @@ bool IsHttpdParentRunning(const char* processName) {
 
             while (Process32NextW(hSnapShot, &pEntry)) {
                 if (pEntry.th32ProcessID == parentId) {
-                    size_t convertedChars = 0;
-                    char buffer[512];
-                    wcstombs_s(&convertedChars, buffer, sizeof(buffer), pEntry.szExeFile, _TRUNCATE);
+                    WToM(pEntry.szExeFile, tempStr, sizeof(tempStr));
 
-                    if (strcmp(buffer, processName) != 0) {
+                    if (strcmp(tempStr, processName) != 0) {
                         // The parent's name is different from httpd.exe, so the current httpd.exe is a parent process.
                         isParent = true;
                         exitLoop = true;  // Set the flag to exit the outer loop
@@ -91,8 +95,13 @@ DWORD isSelfChildProcessOfCurrent(const char* processName) {
     BOOL hRes = Process32First(hSnapShot, &pEntry);
 
     BOOL findTag = false;
+
+    char tempFileStr[512];
+
     while (hRes) {
-        if (strcmp((LPSTR)pEntry.szExeFile, processName) == 0) {
+        WToM(pEntry.szExeFile, tempFileStr, sizeof(tempFileStr));
+
+        if (strcmp(tempFileStr, processName) == 0) {
             // Found the process.
             findTag = true;
 

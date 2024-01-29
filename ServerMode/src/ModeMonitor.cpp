@@ -4,6 +4,7 @@
 #include <wchar.h>
 #include "ModeMonitor.h"
 #include "Log.h"
+#include "Common.h"
 
 // A function to compare two wide strings, used for qsort.
 int wcompare(const void* a, const void* b) {
@@ -34,15 +35,18 @@ DWORD getParentProcessIdForName(DWORD processId, char* parentName, DWORD bufferS
     PROCESSENTRY32 pEntry;
     pEntry.dwSize = sizeof(pEntry);
 
+    char tempStr[512];
+
     if (Process32FirstW(hSnapShot, &pEntry)) {
         do {
             if (pEntry.th32ProcessID == processId) {
-                strncpy_s(parentName, bufferSize, (LPSTR)pEntry.szExeFile, _TRUNCATE);
+                WToM(pEntry.szExeFile, tempStr, sizeof(tempStr));
+                strncpy_s(parentName, bufferSize, tempStr, _TRUNCATE);
 
                 CloseHandle(hSnapShot);
                 return pEntry.th32ParentProcessID;
             }
-        } while (Process32NextW(hSnapShot, &pEntry));
+        } while (Process32Next(hSnapShot, &pEntry));
     }
 
     CloseHandle(hSnapShot);
@@ -58,12 +62,16 @@ DWORD getTargetProcessesHash(const char* targetProcesses[], size_t targetCount) 
 
     DWORD hash = 0; // Initialize hash value
 
+    char tempStr[512];
+
     PROCESSENTRY32W pEntry;
     pEntry.dwSize = sizeof(pEntry);
-    if (Process32FirstW(hSnapShot, &pEntry)) {
+    if (Process32First(hSnapShot, &pEntry)) {
         do {
             for (size_t i = 0; i < targetCount; i++) {
-                if (strcmp((LPSTR)pEntry.szExeFile, targetProcesses[i]) == 0) {
+
+                WToM(pEntry.szExeFile, tempStr, sizeof(tempStr));
+                if (strcmp(tempStr, targetProcesses[i]) == 0) {
                     HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pEntry.th32ProcessID);
 
                     HANDLE hParentProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pEntry.th32ParentProcessID);
@@ -85,7 +93,10 @@ DWORD getTargetProcessesHash(const char* targetProcesses[], size_t targetCount) 
                                 hash ^= (DWORD)creationTime.dwHighDateTime; // XOR with creation time high part
 
                                 // XOR with process name, character by character
-                                char* processName = (LPSTR)pEntry.szExeFile;
+
+                                WToM(pEntry.szExeFile, tempStr, sizeof(tempStr));
+
+                                char* processName = tempStr;
                                 while (*processName) {
                                     hash ^= (DWORD)(*processName);
                                     processName++;

@@ -150,7 +150,7 @@ int extract_zip_file(const char* zipFilename, const char* serviceType, const cha
             create_directory_recursive(fullPath);
 
             FILE* outfile;
-            fopen_s(&outfile, fullPath, "wb");
+            fopen_s(&outfile, fullPath, "wb+N");
             if (!outfile) {
                 unzCloseCurrentFile(zfile);
                 unzClose(zfile);

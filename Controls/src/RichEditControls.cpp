@@ -73,32 +73,6 @@ void CreateRichEditControls(HWND hWnd, HINSTANCE hInstance) {
     SetWindowSubclass(GetDlgItem(hWnd, IDC_RICH_EDIT), RichEditSubClassProc, 0, 0);
 }
 
-void CheckRichEditLinesForErrors(HWND hRichEdit) {
-    LRESULT lineCount = SendMessage(hRichEdit, EM_GETLINECOUNT, 0, 0);
-    for (int i = 0; i < lineCount; i++) {
-        char lineText[1024];
-        *(WORD*)lineText = sizeof(lineText);
-        LRESULT len = SendMessage(hRichEdit, EM_GETLINE, i, (LPARAM)lineText);
-        lineText[len] = L'\0';
-
-        if (strncmp(lineText, "ERROR", 5) == 0) {
-            CHARFORMAT cf;
-            memset(&cf, 0, sizeof(cf));
-            cf.cbSize = sizeof(cf);
-            cf.dwMask = CFM_COLOR;
-            cf.crTextColor = RGB(255, 0, 0);
-
-            LRESULT lineStart = SendMessage(hRichEdit, EM_LINEINDEX, i, 0);
-            LRESULT lineEnd = lineStart + len;
-
-            SendMessage(hRichEdit, EM_SETSEL, lineStart, lineEnd);
-            SendMessage(hRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-        }
-    }
-
-    SendMessage(hRichEdit, EM_SETSEL, -1, -1);
-}
-
 void getCurrentDateTime(char* buffer, size_t bufferSize) {
     time_t t;
     struct tm tm_info;
@@ -114,46 +88,66 @@ void ClearRichEdit() {
     SetWindowText(hRichEdit, L"");
 }
 
-void AppendEditInfo(const char* string) {
-    // Get the text length of the edit box so we can determine where to insert new content.
+void LogOutput(const char* type, const char* content) {
     int nLength = GetWindowTextLength(hRichEdit);
-
-    // Move the insertion point to the end of the text.
     SendMessageA(hRichEdit, EM_SETSEL, (WPARAM)nLength, (LPARAM)nLength);
 
-    CHARFORMAT cfSize;
-    ZeroMemory(&cfSize, sizeof(cfSize));
-
-    cfSize.cbSize = sizeof(cfSize);
-    cfSize.dwMask = CFM_SIZE; // We want to modify font size
-    cfSize.yHeight = 10 * 20; // font size is in twips (1/1440 inch or 1/20 of a point)
+    /////////////////////////////////////
 
     char datetime[128];
     getCurrentDateTime(datetime, sizeof(datetime));
 
-    // Define a gray CHARFORMAT.
     CHARFORMAT cf;
     ZeroMemory(&cf, sizeof(cf));
     cf.cbSize = sizeof(cf);
-    cf.dwMask = CFM_COLOR;
-    cf.crTextColor = RGB(136, 136, 136);
+    //cf.dwMask = CFM_SIZE;
+    //cf.yHeight = 10 * 20;
 
-    // Set the format first.
+    // time
+    cf.dwMask = CFM_COLOR;
+    cf.crTextColor = RGB(136, 136, 158);
     SendMessageA(hRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
-    // Then insert date and time text.
+
     SendMessageA(hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)datetime);
 
-    // Reset the format to default.
-    cf.crTextColor = RGB(51, 51, 51);
+    // info or error
+    //cf.dwMask = CFM_COLOR;
+    //cf.dwEffects = CFE_BOLD;
+    if (type == "ERR") {
+        cf.crTextColor = RGB(238, 96, 96);
+    }
+    else if (type == "WARN") {
+        cf.crTextColor = RGB(255, 150, 60);
+    }
+    else {
+        cf.crTextColor = RGB(10, 138, 50);
+    }
     SendMessageA(hRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
-    // Insert new content.
-    SendMessageA(hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)string);
+    char typeStr[256] = { 0 };
+    sprintf_s(typeStr, sizeof(typeStr), "%s ", type);
+    SendMessageA(hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)typeStr);
 
-    LRESULT iLines = SendMessage(hRichEdit, EM_GETLINECOUNT, 0, (LPARAM)0);
-    SendMessageA(hRichEdit, EM_SCROLL, SB_LINEDOWN, iLines + 1);
+    // content
+    //cf.dwMask = CFM_COLOR;
+    //cf.dwEffects &= ~CFE_BOLD;
+    cf.crTextColor = RGB(86, 86, 86);
+    SendMessageA(hRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
-    SendMessageA(hRichEdit, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cfSize);
+    SendMessageA(hRichEdit, EM_REPLACESEL, FALSE, (LPARAM)content);
 
-    CheckRichEditLinesForErrors(hRichEdit);
+    LRESULT nLinesCount = SendMessage(hRichEdit, EM_GETLINECOUNT, 0, (LPARAM)0);
+    SendMessageA(hRichEdit, EM_SCROLL, SB_LINEDOWN, nLinesCount + 1);
+}
+
+void InfoOutput(const char* str) {
+    LogOutput("INFO", str);
+}
+
+void WarnOutput(const char* str) {
+    LogOutput("WARN", str);
+}
+
+void ErrOutput(const char* str) {
+    LogOutput("ERR", str);
 }

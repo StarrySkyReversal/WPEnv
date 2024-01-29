@@ -31,17 +31,12 @@ DWORD WINAPI DispatchManagerDownloadThread(LPVOID lParam) {
                     DIRECTORY_SERVICE, softwareItems[i]->serviceType, softwareItems[i]->version);
 
                 if (DirectoryExists(tempVersionDirectory)) {
-                    //char serverFolderMsg[512];
-                    //sprintf_s(serverFolderMsg, sizeof(serverFolderMsg), "The corresponding version folder already exists: %s/%s/%s\r\n",
-                    //    DIRECTORY_SERVICE, softwareItems[i]->serviceType, softwareItems[i]->version);
-                    //AppendEditInfo(serverFolderMsg);
-
                     continue;
                 }
 
                 char unzipTempMsg[512] = { '\0' };
-                sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "INFO: Target file %s exists\r\n", softwareItems[i]->fileFullName);
-                AppendEditInfo(unzipTempMsg);
+                sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "Target file %s exists\r\n", softwareItems[i]->fileFullName);
+                WarnOutput(unzipTempMsg);
 
                 UnzipFile(softwareItems[i]);
 

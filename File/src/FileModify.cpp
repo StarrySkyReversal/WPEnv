@@ -38,10 +38,10 @@ int replaceSubstring_s(char* source, size_t sourceSize, const char* target, cons
 void replaceStringInFile(const char* filename, const char* old_content, const char* new_content) {
     char linedata[512] = { '\0' };
     FILE* fp;
-    fopen_s(&fp, filename, "rb+");
+    fopen_s(&fp, filename, "rb+N");
 
     FILE* tempFile;
-    fopen_s(&tempFile, "tmp.txt", "wb+");
+    fopen_s(&tempFile, "tmp.txt", "wb+N");
     while (fgets(linedata, sizeof(linedata) - 1, fp))
     {
         char* ptr = strstr(linedata, old_content);

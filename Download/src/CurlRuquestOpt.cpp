@@ -85,6 +85,9 @@ void SetCurlComponent(const char* url, DownloadPart* part, curl_slist* headers) 
 	curl_easy_setopt(part->easy_handle, CURLOPT_CONNECTTIMEOUT, 10L);
 	curl_easy_setopt(part->easy_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 	curl_easy_setopt(part->easy_handle, CURLOPT_SSL_VERIFYHOST, 0L);
+
+	curl_easy_setopt(part->easy_handle, CURLOPT_LOW_SPEED_LIMIT, 1024 * 256);
+	curl_easy_setopt(part->easy_handle, CURLOPT_LOW_SPEED_TIME, 4);
 }
 
 DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
@@ -111,15 +114,16 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 	CURLM* multi_handle = curl_multi_init();
 
 	for (int i = 0; i < numSubPartSize; i++) {
-		//CURL* easy_handle;
-		SetCurlComponent(partGroup[0]->url, partGroup[i], headers);
-
-		//Log("timestamp: %llu;count_filename:%ls\r\n", partGroup[i]->timestamp, partGroup[i]->filepath);
-		if (fopen_s(&partGroup[i]->file, partGroup[i]->filepath, "ab")) {  // ab
+		// Here ab+N means that the files created and opened after the execution of fopen_s are not allowed 
+		// to be occupied by sub-processes (N must be added because this piece is covered in the ProcessMode place).
+		if (fopen_s(&partGroup[i]->file, partGroup[i]->filepath, "ab+N")) {
 			partGroup[i]->status = -1;
 			Log("timestamp: %llu;Failed to open file: %s errorCode:%d\r\n", partGroup[i]->timestamp, partGroup[i]->filepath, GetLastError());
 			break;
 		}
+
+		//CURL* easy_handle;
+		SetCurlComponent(partGroup[0]->url, partGroup[i], headers);
 
 		curl_multi_add_handle(multi_handle, partGroup[i]->easy_handle);
 	}
@@ -149,43 +153,42 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 					if (partGroup[i]->easy_handle == m->easy_handle) {
 						// judge is last element
 						if (m->data.result != CURLE_OK) {
-							Log("CURLE_ERROR:%s\r\n", curl_easy_strerror(m->data.result));
+							Log("Download detected and need to retry, CURLE_ERROR:%s\r\n", curl_easy_strerror(m->data.result));
 							EnterCriticalSection(&progressCriticalSection);
 							abnormalCount += 1;
 
 							// mark next retry
 							partGroup[i]->status = -1;
 							LeaveCriticalSection(&progressCriticalSection);
-
-							partGroup[i]->statusCode = 0;
 						}
 						else {
+							EnterCriticalSection(&progressCriticalSection);
 							partGroup[i]->status = 1;
+							LeaveCriticalSection(&progressCriticalSection);
 						}
 
 						EnterCriticalSection(&progressCriticalSection);
 						numLockFlow -= 1;
 						LeaveCriticalSection(&progressCriticalSection);
-					}
 
-					if (partGroup[i]->statusCode != -1) {
 						finishCount += 1;
 					}
 				}
 
-				if (finishCount == numSubPartSize) {
-					SetEvent(hEvent);
-				}
+				Log("SetEvent\r\n");
+				SetEvent(hEvent);
 			}
 		}
 	} while (still_running);
 
-	//fclose(debugFile);
-
 	for (int i = 0; i < numSubPartSize; i++) {
-		curl_multi_remove_handle(multi_handle, partGroup[i]->easy_handle);
+		if (partGroup[i]->file != NULL) {
+			curl_multi_remove_handle(multi_handle, partGroup[i]->easy_handle);
+
+			fclose(partGroup[i]->file);
+		}
+
 		curl_easy_cleanup(partGroup[i]->easy_handle);
-		fclose(partGroup[i]->file);
 	}
 
 	curl_slist_free_all(headers);

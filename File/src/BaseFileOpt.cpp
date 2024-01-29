@@ -122,19 +122,19 @@ DWORD MergeFiles(const char* destination, const char* parts[], int num_parts) {
     FILE* dest_file;
     errno_t err;
     char err_buffer[512];
-    fopen_s(&dest_file, destination, "wb");
+    fopen_s(&dest_file, destination, "wb+N");
     if (!dest_file) {
         Log("Error opening destination file");
         return -1;
     }
 
     int attempts = 0;
-    int max_attempts = 100;
+    int max_attempts = 10;
 
     for (int i = 0; i < num_parts; i++) {
         if (CheckFileExists(parts[i])) {
             FILE* part_file;
-            while ((err = fopen_s(&part_file, parts[i], "rb")) != 0 && attempts < max_attempts) {
+            while ((err = fopen_s(&part_file, parts[i], "rb+N")) != 0 && attempts < max_attempts) {
                 strerror_s(err_buffer, sizeof(err_buffer), err);
                 Log("Attempt %d ,Error opening part file, msg: %s\r\n", attempts, err_buffer);
                 attempts++;
@@ -230,7 +230,7 @@ bool CheckFileExists(const char* filePath) {
         !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-bool GetFileSize(const char* filepath, unsigned long long* size) {
+bool GetTargetFileSize(const char* filepath, unsigned long long* size) {
     HANDLE hFile = CreateFileA(
         filepath,
         GENERIC_READ,
@@ -296,12 +296,12 @@ int copyFile(const char* sourcePath, const char* destPath) {
     FILE* sourceFile, * destFile;
     char ch;
 
-    if (fopen_s(&sourceFile, sourcePath, "r") != 0) {
+    if (fopen_s(&sourceFile, sourcePath, "r+N") != 0) {
         perror("Unable to open source file");
         return -1;
     }
 
-    if (fopen_s(&destFile, destPath, "w") != 0) {
+    if (fopen_s(&destFile, destPath, "w+N") != 0) {
         perror("Unable to open destination file");
         fclose(sourceFile);
         return -1;

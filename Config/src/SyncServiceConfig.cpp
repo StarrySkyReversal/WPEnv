@@ -12,16 +12,10 @@
 #include "FileFindOpt.h"
 #include "Compression.h"
 #include <errno.h>
+#include "DownloadThread.h"
 
 
 DWORD phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* result, size_t bufferSize) {
-	//char tempPHPVersion[256];
-	//strncpy_s(tempPHPVersion, sizeof(tempPHPVersion), phpVersion, strlen(phpVersion));
-	//tempPHPVersion[sizeof(tempPHPVersion) - 1] = '\0';
-
-	//char* versionStr;
-	//char* context = NULL;
-	//versionStr = strtok_s(tempPHPVersion, "_", &context);
 	char dllFilePath[512];
 
 	if (
@@ -89,14 +83,15 @@ DWORD versionMatch(const char* serviceType, const char* fileTagVersion, const ch
 	}
 	errno_t err;
 
-	err = fopen_s(&sourceFile, sourceFilename, "rb");
+	err = fopen_s(&sourceFile, sourceFilename, "rb+N");
 	if (err != 0) {
 		MessageBoxA(hWndMain, "The repository directory does not exist, please rebuild the project.", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 
-	err = fopen_s(&newFile, targetFilepath, "wb");
+	err = fopen_s(&newFile, targetFilepath, "wb+N");
 	if (err != 0) {
+		fclose(sourceFile);
 		MessageBoxA(hWndMain, "Target file does not exist, please download it first", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
@@ -216,19 +211,38 @@ void InstallDefaultService(char* wProgramDirectory) {
 
 	if (_access(defaultApacheFile_x64, 0) == 0) {
 		if (!DirectoryExists(defaultApacheVersionDir_x64)) {
-			extract_zip_file(defaultApacheFile_x64, "apache", "httpd-2.4.58_vs17-x64");
+			SoftwareInfo pSoftwareInfo;
+			pSoftwareInfo.fileFullName = "httpd-2.4.58_vs17-x64.zip";
+			pSoftwareInfo.serviceType = "apache";
+			pSoftwareInfo.version = "httpd-2.4.58_vs17-x64";
+			pSoftwareInfo.versionNumber = "httpd-2.4.58";
+			pSoftwareInfo.link = "";
+			UnzipFile(&pSoftwareInfo);
 		}
 	}
 
 	if (_access(defaultApacheFile_x86, 0) == 0) {
 		if (!DirectoryExists(defaultApacheVersionDir_x86)) {
-			extract_zip_file(defaultApacheFile_x86, "apache", "httpd-2.4.58_vs17-x86");
+			SoftwareInfo pSoftwareInfo;
+			pSoftwareInfo.fileFullName = "httpd-2.4.58_vs17-x86.zip";
+			pSoftwareInfo.serviceType = "apache";
+			pSoftwareInfo.version = "httpd-2.4.58_vs17-x86";
+			pSoftwareInfo.versionNumber = "httpd-2.4.58";
+			pSoftwareInfo.link = "";
+			UnzipFile(&pSoftwareInfo);
 		}
 	}
 
 	if (_access(defaultNginxFile, 0) == 0) {
 		if (!DirectoryExists(defaultNginxVersionDir)) {
 			extract_zip_file(defaultNginxFile, "nginx", "nginx-1.24.0");
+			SoftwareInfo pSoftwareInfo;
+			pSoftwareInfo.fileFullName = "nginx-1.24.0.zip";
+			pSoftwareInfo.serviceType = "nginx";
+			pSoftwareInfo.version = "nginx-1.24.0";
+			pSoftwareInfo.versionNumber = "nginx-1.24.0";
+			pSoftwareInfo.link = "";
+			UnzipFile(&pSoftwareInfo);
 		}
 	}
 }
@@ -276,7 +290,7 @@ DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 	sprintf_s(webDefaultIndexFile, sizeof(webDefaultIndexFile), "%s/index.php", webDefaultDir);
 	if (!CheckFileExists(webDefaultIndexFile)) {
 		FILE* file;
-		fopen_s(&file, webDefaultIndexFile, "w");
+		fopen_s(&file, webDefaultIndexFile, "w+N");
 		if (file != NULL) {
 			fprintf_s(file, "<?php  echo \"Hello World!\";?>\n");
 			fclose(file);
@@ -359,14 +373,15 @@ DWORD SyncPHPAndApacheConf(SoftwareGroupInfo softwareGroupInfo, ServiceUseConfig
 
 	errno_t err;
 
-	err = fopen_s(&sourceFile, sourcePath, "rb+");
+	err = fopen_s(&sourceFile, sourcePath, "rb+N");
 	if (err != 0) {
 		MessageBoxA(hWndMain, "Switching php version apache configuration did not synchronize successfully, please exit the apache configuration file being edited.", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 
-	err = fopen_s(&newFile, tempPath, "wb+");
+	err = fopen_s(&newFile, tempPath, "wb+N");
 	if (err != 0) {
+		fclose(sourceFile);
 		MessageBoxA(hWndMain, "Switching the php version of apache configuration did not synchronize successfully, create file failed.", "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}

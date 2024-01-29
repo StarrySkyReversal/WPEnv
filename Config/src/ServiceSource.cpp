@@ -195,7 +195,7 @@ void InitializeServiceSource() {
     FILE* file;
 
     // file exists
-    errno_t err = fopen_s(&file, FILE_CONFIG_SERVICE_SOURCE, "w");
+    errno_t err = fopen_s(&file, FILE_CONFIG_SERVICE_SOURCE, "w+N");
     if (err != 0 || !file) {
         if (file) {
             fclose(file);
@@ -210,7 +210,7 @@ void InitializeServiceSource() {
 
 void LoadServiceSourceData() {
     FILE* fp;
-    fopen_s(&fp, FILE_CONFIG_SERVICE_SOURCE, "rb");
+    fopen_s(&fp, FILE_CONFIG_SERVICE_SOURCE, "rb+N");
     if (!fp) {
         return;
     }

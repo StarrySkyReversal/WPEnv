@@ -82,12 +82,19 @@ DWORD WINAPI ReadFromPipeThread(LPVOID lpParam) {
             buffer[bytesRead] = '\0';
 
             char wOutputBuffer[65525];
-            sprintf_s(wOutputBuffer, sizeof(wOutputBuffer), "INFO: Create process %s result: %s \r\n", processPipe->processName, buffer);
+            sprintf_s(wOutputBuffer, sizeof(wOutputBuffer), "Create process %s result: %s", processPipe->processName, buffer);
 
-            AppendEditInfo(wOutputBuffer);
+            if (strstr(buffer, "error")) {
+                ErrOutput(wOutputBuffer);
+            } else if(strstr(buffer, "warning")) {
+                WarnOutput(wOutputBuffer);
+            }
+            else {
+                InfoOutput(wOutputBuffer);
+            }
 
             if (!EndsWithNewline(buffer)) {
-                AppendEditInfo("\r\n");
+                InfoOutput("\r\n");
             }
         }
 
@@ -213,10 +220,10 @@ DWORD phpProcess(ServiceUseConfig* serviceUse) {
     pPhpProcessDetail->cmd = phpRunCmd;
     pPhpProcessDetail->dir = phpDirectoryPath;
     if (CalllCreateProcess(pPhpProcessDetail) == true) {
-        AppendEditInfo("INFO: PHP runing.\r\n");
+        InfoOutput("PHP runing.\r\n");
     }
     else {
-        AppendEditInfo("INFO: PHP start fail.\r\n");
+        ErrOutput("PHP start fail.\r\n");
     }
 
     char phpBinDirectory[256];
@@ -309,10 +316,10 @@ DWORD mysqlServiceProcess(ServiceUseConfig* serviceUse, bool* bMysqlInit) {
         pMysqlInitProcessDetail->cmd = mysqldCmdInitDataDirectory;
         pMysqlInitProcessDetail->dir = mysqldBinDirectory;
         if (CalllCreateProcess(pMysqlInitProcessDetail, true) == true) {
-            AppendEditInfo("INFO: Mysql initialized.\r\n");
+            InfoOutput("Mysql initialized.\r\n");
         }
         else {
-            AppendEditInfo("INFO: Mysql initialize fail.\r\n");
+            ErrOutput("Mysql initialize fail.\r\n");
         }
         ////////////////////////////////////////////////////////////////////////
     }
@@ -326,10 +333,10 @@ DWORD mysqlServiceProcess(ServiceUseConfig* serviceUse, bool* bMysqlInit) {
     pMysqlProcessDetail->dir = mysqldBinDirectory;
 
     if (CalllCreateProcess(pMysqlProcessDetail) == true) {
-        AppendEditInfo("INFO: Mysql runing.\r\n");
+        InfoOutput("Mysql runing.\r\n");
     }
     else {
-        AppendEditInfo("INFO: Mysql start fail.\r\n");
+        ErrOutput("Mysql start fail.\r\n");
     }
 
     webDaemonServiceInstance.mysqldExe = "mysqld.exe";
@@ -382,13 +389,15 @@ DWORD webServiceProcess(ServiceUseConfig* serviceUse) {
 
     if (CalllCreateProcess(pWebServiceProcessDetail) == true) {
         char successMsg[256];
-        sprintf_s(successMsg, sizeof(successMsg), "INFO: %s is running\r\n", tempServiceProcessName);
-        AppendEditInfo(successMsg);
+        sprintf_s(successMsg, sizeof(successMsg), "%s is running\r\n", tempServiceProcessName);
+
+        InfoOutput(successMsg);
     }
     else {
         char failMsg[256];
-        sprintf_s(failMsg, sizeof(failMsg), "INFO: %s start fail\r\n", tempServiceProcessName);
-        AppendEditInfo(failMsg);
+        sprintf_s(failMsg, sizeof(failMsg), "%s start fail\r\n", tempServiceProcessName);
+
+        ErrOutput(failMsg);
     }
 
     webDaemonServiceInstance.webServiceExe = webServiceBinExe;
@@ -516,39 +525,39 @@ DWORD WINAPI DaemonMonitorService(LPVOID lParam) {
         DWORD currentNginxHash = getTargetProcessesHash(nginxProcesses, sizeof(nginxProcesses) / sizeof(nginxProcesses[0]));
 
         if ((currentPHPHash != previousPHPHash || isFirstRun == true) && isSelfChildProcessOfCurrent("php-cgi.exe") == 2 && IsHttpdParentRunning("php-cgi.exe")) {
-            AppendEditInfo("WARNING: PHP is not started by this program.\r\n");
+            WarnOutput("PHP is not started by this program.\r\n");
         }
 
         if ((previousMysqlHash != currentMysqlHash || isFirstRun == true) && isSelfChildProcessOfCurrent("mysqld.exe") == 2 && IsHttpdParentRunning("mysqld.exe")) {
-            AppendEditInfo("WARNING: Mysql is not started by this program.\r\n");
+            WarnOutput("Mysql is not started by this program.\r\n");
         }
 
         if ((previousApacheHash != currentApacheHash || isFirstRun == true) && isSelfChildProcessOfCurrent("httpd.exe") == 2 && IsHttpdParentRunning("httpd.exe")) {
-            AppendEditInfo("WARNING: Apache is not started by this program.\r\n");
+            WarnOutput("Apache is not started by this program.\r\n");
         }
 
         if ((previousNginxHash != currentNginxHash || isFirstRun == true) && isSelfChildProcessOfCurrent("nginx.exe") == 2 && IsHttpdParentRunning("nginx.exe")) {
-            AppendEditInfo("WARNING: Nginx is not started by this program.\r\n");
+            WarnOutput("Nginx is not started by this program.\r\n");
         }
 
         // While it's running, monitor to see if the process has been closed due to interference from other processes.
         if (bPHPRunning && !ProcessIsRunning("php-cgi.exe")) {
-            AppendEditInfo("ERROR: php-cgi.exe Unexpected exit.\r\n");
+            ErrOutput("php-cgi.exe Unexpected exit.\r\n");
             bPHPRunning = false;
         }
 
         if (bMysqlRunning && !ProcessIsRunning("mysqld.exe")) {
-            AppendEditInfo("ERROR: mysqld.exe Unexpected exit.\r\n");
+            ErrOutput("mysqld.exe Unexpected exit.\r\n");
             bMysqlRunning = false;
         }
 
         if (bApacheRunning && !ProcessIsRunning("httpd.exe")) {
-            AppendEditInfo("ERROR: httpd.exe Unexpected exit.\r\n");
+            ErrOutput("httpd.exe Unexpected exit.\r\n");
             bApacheRunning = false;
         }
 
         if (bNginxRunning && !ProcessIsRunning("nginx.exe")) {
-            AppendEditInfo("ERROR: nginx.exe Unexpected exit.\r\n");
+            ErrOutput("nginx.exe Unexpected exit.\r\n");
             bNginxRunning = false;
         }
 
@@ -608,12 +617,12 @@ DWORD CallDeleteProcess(ProcessDetail pProcessDetail) {
 
     if (exitCode != 0) {
         Log("code:%lu\r\n", exitCode);
-        sprintf_s(publicMsgInfo, sizeof(publicMsgInfo), "INFO: %s stop fail\r\n", pProcessDetail.serviceName);
-        AppendEditInfo(publicMsgInfo);
+        sprintf_s(publicMsgInfo, sizeof(publicMsgInfo), "%s stop fail\r\n", pProcessDetail.serviceName);
+        ErrOutput(publicMsgInfo);
     }
     else {
-        sprintf_s(publicMsgInfo, sizeof(publicMsgInfo), "INFO: %s stop\r\n", pProcessDetail.serviceName);
-        AppendEditInfo(publicMsgInfo);
+        sprintf_s(publicMsgInfo, sizeof(publicMsgInfo), "%s stop\r\n", pProcessDetail.serviceName);
+        InfoOutput(publicMsgInfo);
     }
 
     free(wCmdStr);

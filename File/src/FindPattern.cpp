@@ -104,7 +104,7 @@
 //bool search_file_for_pattern(const char* filepath, const char* pattern, char* out, size_t out_size) {
 //    char buffer[1024];
 //    FILE* file;
-//    errno_t err = fopen_s(&file, filepath, "r");
+//    errno_t err = fopen_s(&file, filepath, "r+N");
 //    if (err != 0) {
 //        perror("Failed to open file");
 //        return false;

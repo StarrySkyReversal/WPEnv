@@ -1,6 +1,5 @@
 #pragma once
 
-
 #define MAX_FILES 1000
 
 typedef struct {
@@ -22,7 +21,7 @@ void GetDirectoryFromPath(const char* fullPath, char* directory, size_t director
 int ReadFileContent(const char* filePath, char** buffer, DWORD* size);
 bool CheckFileExists(const char* filePath);
 
-bool GetFileSize(const char* filepath, unsigned long long* size);
+bool GetTargetFileSize(const char* filepath, unsigned long long* size);
 
 char* get_current_program_directory();
 
