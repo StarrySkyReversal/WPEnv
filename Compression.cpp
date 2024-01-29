@@ -76,10 +76,17 @@ int extract_zip_file(const char* zipFilename, const char* serviceType, const cha
 
     char serveiceTypeDirectory[512];
     sprintf_s(serveiceTypeDirectory, sizeof(serveiceTypeDirectory), "%s/%s", DIRECTORY_SERVICE, serviceType);
-
     if (!DirectoryExists(serveiceTypeDirectory)) {
         CreateDirectoryA(serveiceTypeDirectory, NULL);
     }
+
+    char targetVersionDir[512];
+    sprintf_s(targetVersionDir, sizeof(targetVersionDir), "%s/%s/", serveiceTypeDirectory, version);
+    if (DirectoryExists(targetVersionDir)) {
+        LogAndMsgBox("The target version of the program already exists, path: %s\r\n", targetVersionDir);
+        return -3;
+    }
+
     /////////////////
     char tempVersionDirectory[512];
     sprintf_s(tempVersionDirectory, "%s/temp_%s", serveiceTypeDirectory, version);
@@ -214,8 +221,16 @@ int extract_zip_file(const char* zipFilename, const char* serviceType, const cha
         MoveFolderContents(tempVersionDirectory, versionDirectory);
     }
 
+    int attempts = 0;
+    int max_attempts = 10;
+
     // Delete temporary directory
-    RemoveDirectoryA(tempVersionDirectory);
+    while (RemoveDirectoryA(tempVersionDirectory) != TRUE && attempts < max_attempts) {
+        Log("RemoveDirectoryA target %s fail\r\n", tempVersionDirectory);
+        Sleep(500);
+    }
+
+    Log("Compression finish %s\r\n", zipFilename);
 
     return 0;
 }

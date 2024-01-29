@@ -324,7 +324,6 @@ bool UnzipFile(SoftwareInfo* pSoftwareInfo) {
     else if (unzipResult == 0) {
         sprintf_s(unzipTempMsg, sizeof(unzipTempMsg), "Unpacking %s complete\r\n", pSoftwareInfo->fileFullName);
         InfoOutput(unzipTempMsg);
-
     }
     else {
         LogAndMsgBox("Unknown unzip error.\r\n");

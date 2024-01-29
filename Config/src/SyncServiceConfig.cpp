@@ -83,16 +83,21 @@ DWORD versionMatch(const char* serviceType, const char* fileTagVersion, const ch
 	}
 	errno_t err;
 
+	char msgInfo[512];
+
 	err = fopen_s(&sourceFile, sourceFilename, "rb+N");
 	if (err != 0) {
-		MessageBoxA(hWndMain, "The repository directory does not exist, please rebuild the project.", "WPEnv", MB_ICONINFORMATION);
+		sprintf_s(msgInfo, sizeof(msgInfo), "Failed to open repository file, please check if you have appropriate permissions. path:%s", sourceFilename);
+		MessageBoxA(hWndMain, msgInfo, "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 
 	err = fopen_s(&newFile, targetFilepath, "wb+N");
 	if (err != 0) {
 		fclose(sourceFile);
-		MessageBoxA(hWndMain, "Target file does not exist, please download it first", "WPEnv", MB_ICONINFORMATION);
+
+		sprintf_s(msgInfo, sizeof(msgInfo), "Target file does not exist, please download it first. path:%s", fileTagVersion);
+		MessageBoxA(hWndMain, msgInfo, "WPEnv", MB_ICONINFORMATION);
 		return -1;
 	}
 
@@ -235,7 +240,6 @@ void InstallDefaultService(char* wProgramDirectory) {
 
 	if (_access(defaultNginxFile, 0) == 0) {
 		if (!DirectoryExists(defaultNginxVersionDir)) {
-			extract_zip_file(defaultNginxFile, "nginx", "nginx-1.24.0");
 			SoftwareInfo pSoftwareInfo;
 			pSoftwareInfo.fileFullName = "nginx-1.24.0.zip";
 			pSoftwareInfo.serviceType = "nginx";

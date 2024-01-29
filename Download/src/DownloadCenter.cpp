@@ -64,7 +64,6 @@ DWORD WINAPI DispatchManagerDownloadThread(LPVOID lParam) {
 }
 
 void StartDownload(SoftwareGroupInfo softwareGroupInfo) {
-    //extract_zip_file("./downloads/8.2.10-nts-Win32-vs16-x64.zip", "php", "8.2.10-nts-Win32-vs16-x64");
     SoftwareGroupInfo* pSoftwareGroupInfo = DeepCopySoftwareGroupInfo(&softwareGroupInfo);
     HANDLE ThreadId = CreateThread(NULL, 0, DispatchManagerDownloadThread, pSoftwareGroupInfo, 0, NULL);
 
