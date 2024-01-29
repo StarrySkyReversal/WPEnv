@@ -40,10 +40,10 @@ void HandleTrayMessage(HWND hwnd, LPARAM lParam) {
         {
             HMENU hMenu = CreatePopupMenu();
 
-            char ServiceConfDirectory[512];
-            char ServiceVhostsFile[512];
-            char ServiceVersion[512];
-            char ServiceVersionTemp[512];
+            char ServiceConfDirectory[512] = { '\0' };
+            char ServiceVhostsFile[512] = { '\0' };
+            char ServiceVersion[512] = { '\0' };
+            char ServiceVersionTemp[512] = { '\0' };
             if (webDaemonServiceInstance.webServiceVersion != NULL) {
                 strcpy_s(ServiceVersionTemp, webDaemonServiceInstance.webServiceVersion);
             }
@@ -65,17 +65,17 @@ void HandleTrayMessage(HWND hwnd, LPARAM lParam) {
                 read_ini_file("config/base.ini", "Service", "LastVhostDir", ServiceVhostsFile, sizeof(ServiceVhostsFile));
             }
 
-            if (ServiceVersionTemp[0] != '\0') {
+            if (strcmp(ServiceVersionTemp, "") != 0) {
                 sprintf_s(ServiceVersion, sizeof(ServiceVersion), "Version[%s]", ServiceVersionTemp);
                 AppendMenuA(hMenu, MF_STRING | MF_DISABLED, ID_MENU_OPEN_FOLDER_VERSION, ServiceVersion);
             }
 
             AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_CONFIG, "Config dir");
             AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_DOWNLOAD, "Downloads dir");
-            if (ServiceConfDirectory[0] != '\0') {
+            if (strcmp(ServiceConfDirectory, "") != 0) {
                 AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_CONF_DIR, "Service conf dir");
             }
-            if (ServiceVhostsFile[0] != '\0') {
+            if (strcmp(ServiceVhostsFile, "") != 0) {
                 AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_VHOSTS_FILE, "Service vhosts file");
             }
 
