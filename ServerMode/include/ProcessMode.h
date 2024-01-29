@@ -20,6 +20,9 @@ typedef struct {
     const char* webServiceExe;
     const char* webServiceExePath;
     const char* webServiceExeDirectory;
+    const char* webServiceConfDirectory;
+    const char* webServiceVhostsFile;
+    const char* webServiceVersion;
 } WebDaemonService;
 
 DWORD StartDaemonService();

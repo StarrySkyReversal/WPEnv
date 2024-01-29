@@ -292,27 +292,27 @@ char* get_current_program_directory_with_forward_slash() {
     return buffer;
 }
 
-int copyFile(const char* sourcePath, const char* destPath) {
-    FILE* sourceFile, * destFile;
-    char ch;
-
-    if (fopen_s(&sourceFile, sourcePath, "r+N") != 0) {
-        perror("Unable to open source file");
-        return -1;
-    }
-
-    if (fopen_s(&destFile, destPath, "w+N") != 0) {
-        perror("Unable to open destination file");
-        fclose(sourceFile);
-        return -1;
-    }
-
-    while ((ch = fgetc(sourceFile)) != EOF) {
-        fputc(ch, destFile);
-    }
-
-    fclose(sourceFile);
-    fclose(destFile);
-
-    return 0;
-}
+//int copyFile(const char* sourcePath, const char* destPath) {
+//    FILE* sourceFile, * destFile;
+//    char ch;
+//
+//    if (fopen_s(&sourceFile, sourcePath, "r+N") != 0) {
+//        perror("Unable to open source file");
+//        return -1;
+//    }
+//
+//    if (fopen_s(&destFile, destPath, "w+N") != 0) {
+//        perror("Unable to open destination file");
+//        fclose(sourceFile);
+//        return -1;
+//    }
+//
+//    while ((ch = fgetc(sourceFile)) != EOF) {
+//        fputc(ch, destFile);
+//    }
+//
+//    fclose(sourceFile);
+//    fclose(destFile);
+//
+//    return 0;
+//}

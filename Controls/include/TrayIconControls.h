@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Resource.h"
+#include "ProcessMode.h"
+
+extern WebDaemonService webDaemonServiceInstance;
 
 const UINT WM_APP_TRAYMSG = WM_APP + 1;
 const UINT ID_TRAY_ICON = 1;

@@ -12,6 +12,7 @@
 #include "ProcessOpt.h"
 #include <io.h>
 #include "SyncServiceConfig.h"
+#include "IniOpt.h"
 
 
 bool bIsStart = false;
@@ -402,15 +403,34 @@ DWORD webServiceProcess(ServiceUseConfig* serviceUse) {
         ErrOutput(failMsg);
     }
 
+    char serviceConfDir[512];
+    char serviceVhostsFile[512];
+    char* wProgramDirectory = get_current_program_directory_with_forward_slash();
+    if (strncmp(serviceUse->webService, "httpd", 5) == 0) {
+        sprintf_s(serviceConfDir, sizeof(serviceConfDir), "%s/%s/Apache24/conf/extra", wProgramDirectory, webServiceDirectoryPath);
+        sprintf_s(serviceVhostsFile, sizeof(serviceVhostsFile), "%s/httpd-vhosts.conf", serviceConfDir);
+    }
+    else {
+        sprintf_s(serviceConfDir, sizeof(serviceConfDir), "%s/%s/conf", wProgramDirectory, webServiceDirectoryPath);
+        sprintf_s(serviceVhostsFile, sizeof(serviceVhostsFile), "%s/vhosts/default.conf", serviceConfDir);
+    }
+
     webDaemonServiceInstance.webServiceExe = webServiceBinExe;
     webDaemonServiceInstance.webServiceExePath = _strdup(pathsWebservice->paths[0]);
     webDaemonServiceInstance.webServiceExeDirectory = _strdup(webServiceBinDirectory);
+    webDaemonServiceInstance.webServiceConfDirectory = _strdup(serviceConfDir);
+    webDaemonServiceInstance.webServiceVhostsFile = _strdup(serviceVhostsFile);
+    webDaemonServiceInstance.webServiceVersion = _strdup(serviceUse->webService);
 
     bApacheRunning = strcmp(webServiceType, "apache") == 0 ? true : false;
     bNginxRunning = strcmp(webServiceType, "nginx") == 0 ? true : false;
 
     free(tempServiceProcessName);
     freePathList(pathsWebservice);
+
+    write_ini_file("config/base.ini", "Service", "Version", serviceUse->webService);
+    write_ini_file("config/base.ini", "Service", "LastConfDir", serviceConfDir);
+    write_ini_file("config/base.ini", "Service", "LastVhostDir", serviceVhostsFile);
 
     return 0;
 }
@@ -501,6 +521,8 @@ void freeWebDaemonServiceInstance(WebDaemonService* webDaemonService) {
     if (webDaemonService->webServiceExe != NULL) {
         free((void*)webDaemonService->webServiceExePath);
         free((void*)webDaemonService->webServiceExeDirectory);
+        free((void*)webDaemonService->webServiceConfDirectory);
+        free((void*)webDaemonService->webServiceVhostsFile);
     }
 }
 

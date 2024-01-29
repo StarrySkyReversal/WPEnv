@@ -27,4 +27,4 @@ char* get_current_program_directory();
 
 char* get_current_program_directory_with_forward_slash();
 
-int copyFile(const char* sourcePath, const char* destPath);
+//int copyFile(const char* sourcePath, const char* destPath);
