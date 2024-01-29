@@ -38,6 +38,8 @@ void HandleTrayMessage(HWND hwnd, LPARAM lParam) {
             break;
         case WM_RBUTTONUP:
         {
+            HMENU hMenu = CreatePopupMenu();
+
             char ServiceConfDirectory[512];
             char ServiceVhostsFile[512];
             char ServiceVersion[512];
@@ -48,7 +50,6 @@ void HandleTrayMessage(HWND hwnd, LPARAM lParam) {
             else {
                 read_ini_file("config/base.ini", "Service", "Version", ServiceVersionTemp, sizeof(ServiceVersionTemp));
             }
-            sprintf_s(ServiceVersion, sizeof(ServiceVersion), "Version[%s]", ServiceVersionTemp);
 
             if (webDaemonServiceInstance.webServiceConfDirectory != NULL) {
                 strcpy_s(ServiceConfDirectory, webDaemonServiceInstance.webServiceConfDirectory);
@@ -56,7 +57,7 @@ void HandleTrayMessage(HWND hwnd, LPARAM lParam) {
             else {
                 read_ini_file("config/base.ini", "Service", "LastConfDir", ServiceConfDirectory, sizeof(ServiceConfDirectory));
             }
-            
+
             if(webDaemonServiceInstance.webServiceVhostsFile != NULL) {
                 strcpy_s(ServiceVhostsFile, webDaemonServiceInstance.webServiceVhostsFile);
             }
@@ -64,12 +65,20 @@ void HandleTrayMessage(HWND hwnd, LPARAM lParam) {
                 read_ini_file("config/base.ini", "Service", "LastVhostDir", ServiceVhostsFile, sizeof(ServiceVhostsFile));
             }
 
-            HMENU hMenu = CreatePopupMenu();
-            AppendMenuA(hMenu, MF_STRING | MF_DISABLED, ID_MENU_OPEN_FOLDER_VERSION, ServiceVersion);
+            if (ServiceVersionTemp[0] != '\0') {
+                sprintf_s(ServiceVersion, sizeof(ServiceVersion), "Version[%s]", ServiceVersionTemp);
+                AppendMenuA(hMenu, MF_STRING | MF_DISABLED, ID_MENU_OPEN_FOLDER_VERSION, ServiceVersion);
+            }
+
             AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_CONFIG, "Config dir");
             AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_DOWNLOAD, "Downloads dir");
-            AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_CONF_DIR, "Service conf dir");
-            AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_VHOSTS_FILE, "Service vhosts file");
+            if (ServiceConfDirectory[0] != '\0') {
+                AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_CONF_DIR, "Service conf dir");
+            }
+            if (ServiceVhostsFile[0] != '\0') {
+                AppendMenuA(hMenu, MF_STRING, ID_MENU_OPEN_FOLDER_VHOSTS_FILE, "Service vhosts file");
+            }
+
             AppendMenuA(hMenu, MF_STRING, ID_MENU_EXIT, "Exit");
 
             POINT pt;
