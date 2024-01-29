@@ -305,6 +305,8 @@ DWORD mysqlServiceProcess(ServiceUseConfig* serviceUse, bool* bMysqlInit) {
         *bMysqlInit = true;
 
         Log("Initialize mysql.\r\n");
+        InfoOutput("MySQL is about to start initialization.\r\n");
+
         ////////////////////////////////////////////////////////////////////////
         // No need to set a password --initialize-insecure,and not use --initialize
         // If you encounter an error, you can add the --console argument at the end to allow the console to output in real-time. This is specific to MYSQL.
