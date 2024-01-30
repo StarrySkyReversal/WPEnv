@@ -76,15 +76,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Place code here.
-    hMutex = CreateMutex(NULL, FALSE, L"UniqueMutexName");
-    if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        MessageBox(NULL, L"Program is running", L"Error", MB_ICONINFORMATION);
-        CloseHandle(hMutex);
-        hMutex = NULL;
-        return 1;
-    }
-
     if (!IsRunAsAdmin()) {
         wchar_t szPath[MAX_PATH];
         if (GetModuleFileName(NULL, szPath, ARRAYSIZE(szPath))) {
@@ -102,6 +93,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             }
             return 1; // Exit the current process
         }
+    }
+
+    // TODO: Place code here.
+    hMutex = CreateMutex(NULL, FALSE, L"UniqueMutexName");
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        MessageBox(NULL, L"Program is running", L"Error", MB_ICONINFORMATION);
+        CloseHandle(hMutex);
+        hMutex = NULL;
+        return 1;
     }
 
     // Initialize global strings

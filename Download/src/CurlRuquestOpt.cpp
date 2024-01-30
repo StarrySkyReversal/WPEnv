@@ -220,6 +220,7 @@ unsigned long long CurlGetRemoteFileSize(const char* url) {
 	CURLcode res;
 	curl = curl_easy_init();
 	if (!curl) {
+		MessageBoxA(NULL, "OK1", NULL, 0);
 		Log("CURL create fail\r\n");
 		return 0;
 	}
@@ -247,6 +248,12 @@ unsigned long long CurlGetRemoteFileSize(const char* url) {
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 10L);
 	curl_easy_setopt(curl, CURLOPT_AUTOREFERER, 1L);
+	//curl_easy_setopt(curl, CURLOPT_SSLENGINE_DEFAULT, 1L);
+	//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
+	//FILE* debug_file;
+	//fopen_s(&debug_file, "curl_debug_output.txt", "w+");
+	//curl_easy_setopt(curl, CURLOPT_STDERR, debug_file);
 
 	res = curl_easy_perform(curl);
 	if (res != CURLE_OK) {

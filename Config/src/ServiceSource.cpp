@@ -170,7 +170,8 @@ void InitializeServiceSource() {
         {"php-5.5.0_ts-vc11-x86":"https://windows.php.net/downloads/releases/archives/php-5.5.0-Win32-VC11-x86.zip"}
     ],
     "mysql": [
-        {"mysql-5.7.43":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.43-winx64.zip"}
+        {"mysql-5.7.43-x64":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.43-winx64.zip"},
+        {"mysql-5.7.43-x86":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.43-win32.zip"}
     ],
     "apache": [
         {"httpd-2.4.58_vs17-x64":"https://www.apachelounge.com/download/VS17/binaries/httpd-2.4.58-win64-VS17.zip"},
@@ -216,7 +217,7 @@ void LoadServiceSourceData() {
     }
 
     fseek(fp, 0, SEEK_END);
-    long length = ftell(fp);
+    size_t length = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
     if (length <= 0) {

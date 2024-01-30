@@ -243,7 +243,7 @@ LRESULT CALLBACK CustomButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 void CreateButtonControls(HWND hWnd, HINSTANCE hInstance) {
     hButtonDownload = CreateWindow(
         L"BUTTON",
-        L"\u2193",
+        L"Download",
         WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
         210 + 4 * (buttonWidth + spacing * 7),
         30,
@@ -256,7 +256,7 @@ void CreateButtonControls(HWND hWnd, HINSTANCE hInstance) {
 
     hButtonAddConfig = CreateWindow(
         L"BUTTON",
-        L"\u2795",
+        L"AddConfig",
         WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
         210 + 4 * (buttonWidth + spacing * 7),
         80,
@@ -269,7 +269,7 @@ void CreateButtonControls(HWND hWnd, HINSTANCE hInstance) {
 
     hButtonStart = CreateWindow(
         L"BUTTON",
-        L"\u25B6",
+        L"Start",
         WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
         210 + 4 * (buttonWidth + spacing * 7),
         0 + listBoxPlusSpacing + 20,
@@ -282,7 +282,7 @@ void CreateButtonControls(HWND hWnd, HINSTANCE hInstance) {
 
     hButtonStop = CreateWindow(
         L"BUTTON",
-        L"\u23F9",
+        L"Stop",
         WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
         210 + 4 * (buttonWidth + spacing * 7),
         0 + listBoxPlusSpacing + 70,
@@ -295,7 +295,7 @@ void CreateButtonControls(HWND hWnd, HINSTANCE hInstance) {
 
     hButtonRestart = CreateWindow(
         L"BUTTON",
-        L"\U0001F504",
+        L"Restart",
         WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
         210 + 4 * (buttonWidth + spacing * 7),
         0 + listBoxPlusSpacing + 120,
@@ -308,7 +308,7 @@ void CreateButtonControls(HWND hWnd, HINSTANCE hInstance) {
 
     hButtonRemove = CreateWindow(
         L"BUTTON",
-        L"\u2796",
+        L"DeleteConfig",
         WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
         210 + 4 * (buttonWidth + spacing * 7),
         0 + listBoxPlusSpacing + 170,

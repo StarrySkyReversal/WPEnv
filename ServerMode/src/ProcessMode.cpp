@@ -160,9 +160,9 @@ bool CalllCreateProcess(ProcessDetail* pProcessDetail, bool waitProcess = false)
 
     ZeroMemory(&(pProcessDetail->pi), sizeof(pProcessDetail->pi));
 
-    if (CreateProcessA(NULL, wCmdStr, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, pProcessDetail->dir, &si, &(pProcessDetail->pi))) {
+    if (CreateProcessA(NULL, wCmdStr, NULL, NULL, TRUE, CREATE_NO_WINDOW | CREATE_BREAKAWAY_FROM_JOB, NULL, pProcessDetail->dir, &si, &(pProcessDetail->pi))) {
         if (!AssignProcessToJobObject(hJob, pProcessDetail->pi.hProcess)) {
-            Log("AssignProcessToJobObject error.\r\n");
+            ErrOutput("AssignProcessToJobObject error.\r\n");
             TerminateProcess(pProcessDetail->pi.hProcess, 1);
             CloseHandle(pProcessDetail->pi.hProcess);
             CloseHandle(pProcessDetail->pi.hThread);
@@ -180,7 +180,15 @@ bool CalllCreateProcess(ProcessDetail* pProcessDetail, bool waitProcess = false)
     }
     else {
         free(wCmdStr);
-        Log("CreateProcess error.\r\n");
+
+        DWORD errCode;
+        errCode = GetLastError();
+
+        if (errCode == 216) {
+            ErrOutput("The version selected is incompatible with the processor architecture of your computer. Please choose the correct x86 or x64 architecture.\r\n");
+        }
+
+        ErrOutput("CreateProcess error.\r\n");
         CloseHandle(hJob);
     }
 

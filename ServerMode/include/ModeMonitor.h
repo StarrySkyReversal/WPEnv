@@ -1,4 +1,4 @@
 #pragma once
 
-DWORD WINAPI getTargetProcessesHash(const char* targetProcesses[], size_t targetCount);
+DWORD getTargetProcessesHash(const char* targetProcesses[], size_t targetCount);
 

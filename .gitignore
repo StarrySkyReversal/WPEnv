@@ -7,3 +7,10 @@
 /WPEnv.aps
 /x64/Release
 /.vs
+/Debug
+/Release
+/downloads
+/Config/service_source.txt
+/Config/service_use.txt
+/service
+/cacert.pem
