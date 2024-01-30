@@ -2,7 +2,7 @@
 
 This project provides an integrated software solution for setting up PHP, MySQL, NGINX, and Apache on Windows, developed using Visual Studio 2022.
 
-The environment for developing this program is Windows 11, It has not yet been tested for running on Windows 10 or Windows 7 systems.
+The environment for developing this program is Windows 11, and it has now been tested and supports running on Windows 7 systems.
 
 ## About Use
 The program comes with Apache httpd 2.4.58 and nginx 1.24.0 pre-installed.
