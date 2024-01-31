@@ -80,6 +80,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir);$(SolutionDir)/Download/include;$(SolutionDir)/Config/include;$(SolutionDir)/Controls/include;$(SolutionDir)/File/include;$(SolutionDir)/ServerMode/include;</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir);$(SolutionDir)/Download/include;$(SolutionDir)/Config/include;$(SolutionDir)/Controls/include;$(SolutionDir)/File/include;$(SolutionDir)/ServerMode/include;</IncludePath>
