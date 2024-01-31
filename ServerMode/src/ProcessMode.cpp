@@ -15,7 +15,9 @@
 #include "IniOpt.h"
 
 
-bool bIsStart = false;
+bool bStartBtnLock = false;
+bool bStopBtnLock = false;
+bool bRestartBtnLock = false;
 bool bPHPRunning = false;
 bool bMysqlRunning = false;
 bool bApacheRunning = false;
@@ -443,15 +445,7 @@ DWORD webServiceProcess(ServiceUseConfig* serviceUse) {
     return 0;
 }
 
-DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
-    if (bIsStart == true) {
-        return 0;
-    }
-
-    EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_START_SERVICE), FALSE);
-
-    bIsStart = true;
-
+DWORD WINAPI CallStartDaemonService(LPVOID lParam) {
     pPhpProcessDetail = new ProcessDetail;
     pPhpProcessDetail->cmd = NULL;
 
@@ -472,9 +466,8 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
     webDaemonServiceInstance.webServiceExe = NULL;
 
     ServiceUseConfig* serviceUse = (ServiceUseConfig*)malloc(sizeof(ServiceUseConfig));
-
     if (!GetServiceUseItem(serviceUse)) {
-        bIsStart = false;
+        bStartBtnLock = false;
         EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_START_SERVICE), TRUE);
         return 1;
     }
@@ -503,14 +496,14 @@ DWORD WINAPI DaemonServiceThread(LPVOID lParam) {
     webDaemonServiceInstance.bRun = true;
 
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_REMOVE_CONFIG), FALSE);
-
+    EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_RESTART_SERVICE), TRUE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_STOP_SERVICE), TRUE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_RESTART_SERVICE), TRUE);
     EnableWindow(GetDlgItem(hWndMain, IDC_LISTBOX_CONFIG), FALSE);
 
     free(serviceUse);
 
-    bIsStart = false;
+    bStartBtnLock = false;
 
     return 0;
 }
@@ -608,15 +601,6 @@ DWORD WINAPI DaemonMonitorService(LPVOID lParam) {
     return 0;
 }
 
-DWORD StartDaemonService() {
-    HANDLE daemonService = CreateThread(NULL, 0, DaemonServiceThread, NULL, 0, NULL);
-    if (daemonService) {
-        CloseHandle(daemonService);
-    }
-
-    return 0;
-}
-
 DWORD CallDeleteProcess(ProcessDetail pProcessDetail) {
     STARTUPINFOA si;
     PROCESS_INFORMATION pi;
@@ -665,9 +649,12 @@ DWORD CallDeleteProcess(ProcessDetail pProcessDetail) {
     return 1;
 }
 
-void CloseDaemonService() {
+DWORD WINAPI CallStopDaemonService(LPVOID lParam) {
     if (webDaemonServiceInstance.bRun == false) {
-        return;
+        bStopBtnLock = false;
+
+        EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_STOP_SERVICE), TRUE);
+        return 0;
     }
 
     EnterCriticalSection(&daemonMonitorServiceCs);
@@ -755,21 +742,87 @@ void CloseDaemonService() {
 
     LeaveCriticalSection(&daemonMonitorServiceCs);
 
-    EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_STOP_SERVICE), FALSE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_RESTART_SERVICE), FALSE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_START_SERVICE), TRUE);
     EnableWindow(GetDlgItem(hWndMain, IDC_LISTBOX_CONFIG), TRUE);
     EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_REMOVE_CONFIG), TRUE);
 
     webDaemonServiceInstance.bRun = false;
+
+    bStopBtnLock = false;
+
+    return 0;
+}
+
+DWORD StartDaemonService(bool bWait) {
+    if (bStartBtnLock == true) {
+        return 0;
+    }
+
+    bStartBtnLock = true;
+    EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_START_SERVICE), FALSE);
+
+    HANDLE hStartHandle = CreateThread(NULL, 0, CallStartDaemonService, NULL, 0, NULL);
+    if (bWait == true) {
+        WaitForSingleObject(hStartHandle, INFINITE);
+    }
+
+    if (hStartHandle) {
+        CloseHandle(hStartHandle);
+    }
+
+    return 0;
+}
+
+DWORD StopDaemonService(bool bWait) {
+    if (bStopBtnLock == true) {
+        return 0;
+    }
+
+    bStopBtnLock = true;
+
+    EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_STOP_SERVICE), FALSE);
+
+    HANDLE hStopHandle = CreateThread(NULL, 0, CallStopDaemonService, NULL, 0, NULL);
+    if (bWait == true) {
+        WaitForSingleObject(hStopHandle, INFINITE);
+    }
+
+    if (hStopHandle) {
+        CloseHandle(hStopHandle);
+    }
+
+    return 0;
+}
+
+DWORD WINAPI CallRestartService(LPVOID lParam) {
+    if (webDaemonServiceInstance.bRun != true) {
+        bRestartBtnLock = false;
+        EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_RESTART_SERVICE), TRUE);
+
+        return 0;
+    }
+
+    StopDaemonService(true);
+
+    StartDaemonService(true);
+
+    bRestartBtnLock = false;
+    EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_RESTART_SERVICE), TRUE);
+
+    return 0;
 }
 
 void RestartDaemonService() {
-    if (webDaemonServiceInstance.bRun != true) {
+    if (bRestartBtnLock == true) {
         return;
     }
+    bRestartBtnLock = true;
 
-    CloseDaemonService();
+    EnableWindow(GetDlgItem(hWndMain, IDC_BUTTON_RESTART_SERVICE), FALSE);
 
-    StartDaemonService();
+    HANDLE hRestartHandle = CreateThread(NULL, 0, CallRestartService, NULL, 0, NULL);
+    if (hRestartHandle) {
+        CloseHandle(hRestartHandle);
+    }
 }

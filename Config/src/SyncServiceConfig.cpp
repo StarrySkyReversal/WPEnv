@@ -252,6 +252,25 @@ void InstallDefaultService(char* wProgramDirectory) {
 }
 
 DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
+	if (softwareGroupInfo.php.version != NULL && softwareGroupInfo.apache.version != NULL) {
+		char phpLastThree[4], apacheLastThree[4];
+
+		size_t phpLen = strlen(softwareGroupInfo.php.version);
+		strncpy_s(phpLastThree, softwareGroupInfo.php.version + phpLen - 3, 3);
+		phpLastThree[3] = '\0';
+
+		size_t apacheLen = strlen(softwareGroupInfo.apache.version);
+		strncpy_s(apacheLastThree, softwareGroupInfo.apache.version + apacheLen - 3, 3);
+		apacheLastThree[3] = '\0';
+
+		if (strcmp(phpLastThree, apacheLastThree) != 0) {
+			MessageBoxA(hWndMain, "The architecture types of PHP and Apache must be either both x64 or both x86.", NULL, 0);
+
+			return -1;
+		}
+	}
+
+
 	if (
 		!(
 			(softwareGroupInfo.php.version != NULL && softwareGroupInfo.mysql.version != NULL && softwareGroupInfo.apache.version != NULL) ||

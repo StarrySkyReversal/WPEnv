@@ -86,8 +86,8 @@ void SetCurlComponent(const char* url, DownloadPart* part, curl_slist* headers) 
 	curl_easy_setopt(part->easy_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 	curl_easy_setopt(part->easy_handle, CURLOPT_SSL_VERIFYHOST, 0L);
 
-	curl_easy_setopt(part->easy_handle, CURLOPT_LOW_SPEED_LIMIT, 1024 * 256);
-	curl_easy_setopt(part->easy_handle, CURLOPT_LOW_SPEED_TIME, 4);
+	curl_easy_setopt(part->easy_handle, CURLOPT_LOW_SPEED_LIMIT, 1024 * 192);
+	curl_easy_setopt(part->easy_handle, CURLOPT_LOW_SPEED_TIME, 6);
 }
 
 DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
@@ -147,7 +147,6 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 		CURLMsg* m;
 		while ((m = curl_multi_info_read(multi_handle, &num_messages))) {
 			if (m->msg == CURLMSG_DONE) {
-				int finishCount = 0;
 				for (int i = 0; i < numSubPartSize; i++)
 				{
 					if (partGroup[i]->easy_handle == m->easy_handle) {
@@ -170,8 +169,6 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 						EnterCriticalSection(&progressCriticalSection);
 						numLockFlow -= 1;
 						LeaveCriticalSection(&progressCriticalSection);
-
-						finishCount += 1;
 					}
 				}
 

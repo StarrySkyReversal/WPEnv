@@ -33,7 +33,7 @@ bool enqueue(Queue* q, DownloadPart item) {
         return false;
     }
 }
-    
+
 bool dequeue(Queue* q, DownloadPart* item) {
     if (!queueIsEmpty(q)) {
         *item = q->items[q->front];

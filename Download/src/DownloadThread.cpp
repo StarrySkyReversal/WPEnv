@@ -219,7 +219,13 @@ DWORD WINAPI ProgressThread(LPVOID param) {
     unsigned long long prevDownloadedTotalSize = 0;
     double nSpeed = 0;
     char speedInfo[16] = "\0";
+    ULONGLONG currentTime = 0;
+    ULONGLONG prevTime = 0;
+    double timeSpent = 0;
     while (currentProgress < 100) {
+        currentTime = GetTickCount64();
+        timeSpent = (double)(currentTime - prevTime) / 1000.0;
+
         EnterCriticalSection(&progressCriticalSection);
         if (downlodedTotalSize > 0) {
             double ratio = (double)downlodedTotalSize / (double)totalSize;
@@ -227,24 +233,31 @@ DWORD WINAPI ProgressThread(LPVOID param) {
 
             SetProgressBarPosition(currentProgress);
 
-            nSpeed = (downlodedTotalSize - prevDownloadedTotalSize) / 1024.0;
-            if (nSpeed >= 1024.0) {
-                nSpeed = nSpeed / 1024.0;
-                sprintf_s(speedInfo, sizeof(speedInfo), " %.2fMB/s", nSpeed);
-            }
-            else {
-                sprintf_s(speedInfo, sizeof(speedInfo), " %dKB/s", (int)nSpeed);
-            }
+            if (timeSpent >= 1) {
+                nSpeed = (downlodedTotalSize - prevDownloadedTotalSize) / 1024.0;
+                if (nSpeed >= 1024.0) {
+                    nSpeed = nSpeed / 1024.0;
+                    sprintf_s(speedInfo, sizeof(speedInfo), " %.2fMB/s", nSpeed);
+                }
+                else {
+                    sprintf_s(speedInfo, sizeof(speedInfo), " %dKB/s", (int)nSpeed);
+                }
 
-            sprintf_s(progressIngMsg, sizeof(progressIngMsg), "%s Downloading: %d%% %s",
-                pSoftwareInfo->fileFullName, currentProgress, speedInfo);
-            UpdateStaticLabelInfo(progressIngMsg);
+                sprintf_s(progressIngMsg, sizeof(progressIngMsg), "%s Downloading: %d%% %s",
+                    pSoftwareInfo->fileFullName, currentProgress, speedInfo);
+                UpdateStaticLabelInfo(progressIngMsg);
+
+                prevTime = GetTickCount64();
+            }
         }
 
-        prevDownloadedTotalSize = downlodedTotalSize;
+        if (timeSpent >= 1) {
+            prevDownloadedTotalSize = downlodedTotalSize;
+        }
+
         LeaveCriticalSection(&progressCriticalSection);
 
-        Sleep(500);
+        Sleep(1);
     }
 
     SetProgressBarPosition(0);

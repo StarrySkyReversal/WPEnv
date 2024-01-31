@@ -25,8 +25,8 @@ typedef struct {
     const char* webServiceVersion;
 } WebDaemonService;
 
-DWORD StartDaemonService();
-void CloseDaemonService();
+DWORD StartDaemonService(bool bWait = false);
+DWORD StopDaemonService(bool bWait = false);
 void RestartDaemonService();
 
 DWORD WINAPI DaemonMonitorService(LPVOID lParam);

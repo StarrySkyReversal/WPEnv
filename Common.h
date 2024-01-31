@@ -13,3 +13,6 @@ void InitRandomSeed();
 int RandomInRange(int min, int max);
 
 SIZE_T GetCurrentProcessMemoryUsage();
+
+BOOL CheckVersionSystemEnable(const char* str);
+BOOL IsWindows8OrGreater();

@@ -258,7 +258,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
         case IDC_BUTTON_ADD_CONFIG:
         {
-            GetServiceVersionInfo(&softwareGroupInfo);
+            if (GetServiceVersionInfo(&softwareGroupInfo) != 0) {
+                return 0;
+            }
 
             if (SyncConfigTemplate(softwareGroupInfo) == 0) {
                 AddNewConfig(softwareGroupInfo);
@@ -274,7 +276,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             break;
         case IDC_BUTTON_STOP_SERVICE:
-            CloseDaemonService();
+            StopDaemonService();
 
             break;
         case IDC_BUTTON_RESTART_SERVICE:
