@@ -8,6 +8,7 @@
 
 #define MAX_LINE_LENGTH 512
 
+
 int read_ini_file(const char* filename, const char* section, const char* key, char* value, size_t value_size) {
     char line[MAX_LINE_LENGTH];
     char current_section[MAX_LINE_LENGTH] = "";
@@ -45,6 +46,15 @@ int read_ini_file(const char* filename, const char* section, const char* key, ch
     return -1; // Key not found
 }
 
+bool checkKeyValueExists(const char* filename, const char* section, const char* key, const char* value) {
+
+    //read_ini_file(const char* filename, const char* section, const char* key, char* value, size_t value_size);
+    char temp[256];
+    read_ini_file(filename, section, key, temp, sizeof(temp));
+
+    return strcmp(temp, value) == 0;
+}
+
 // Used to check if a string is a given section
 bool is_section(const char* line, const char* section) {
     char expected_line[MAX_LINE_LENGTH];
@@ -56,8 +66,12 @@ int write_ini_file(const char* filename, const char* section, const char* key, c
     FILE* file;
     char line[MAX_LINE_LENGTH];
     char new_content[MAX_LINE_LENGTH * 256] = "";
-    bool section_found = false, key_found = false;
+    bool section_found = false;
+
     errno_t err;
+
+    bool new_section_found = false;
+    bool new_key_found = false;
 
     // Opening a file in read mode
     err = fopen_s(&file, filename, "r+N");
@@ -67,6 +81,7 @@ int write_ini_file(const char* filename, const char* section, const char* key, c
             if (!section_found) {
                 if (is_section(line, section)) {
                     section_found = true;
+                    new_section_found = true;
                 }
             }
             else if (line[0] == '[') {
@@ -74,7 +89,7 @@ int write_ini_file(const char* filename, const char* section, const char* key, c
             }
 
             if (section_found && strncmp(line, key, strlen(key)) == 0 && line[strlen(key)] == '=') {
-                key_found = true;
+                new_key_found = true;
                 snprintf(line, sizeof(line), "%s=%s\n", key, value); // Replacement of key values
             }
 
@@ -84,10 +99,10 @@ int write_ini_file(const char* filename, const char* section, const char* key, c
     }
 
     // Contents of the modification
-    if (!section_found) {
+    if (!new_section_found) {
         snprintf(new_content + strlen(new_content), sizeof(new_content) - strlen(new_content), "[%s]\n", section);
     }
-    if (!key_found) {
+    if (!new_key_found) {
         snprintf(new_content + strlen(new_content), sizeof(new_content) - strlen(new_content), "%s=%s\n", key, value);
     }
 

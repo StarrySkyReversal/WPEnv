@@ -240,12 +240,28 @@ DWORD phpProcess(ServiceUseConfig* serviceUse) {
     char phpBinDirectory[256];
     GetDirectoryFromPath(pathsPHP->paths[0], phpBinDirectory, sizeof(phpBinDirectory));
 
+
+    char* programDirectory = get_current_program_directory_with_forward_slash();
+
+    char phpFullPathDir[256];
+    sprintf_s(phpFullPathDir, sizeof(phpFullPathDir), "%s/%s", programDirectory, phpDirectoryPath);
+
+    char phpIniFilePath[256];
+    sprintf_s(phpIniFilePath, sizeof(phpIniFilePath), "%s/php.ini", phpFullPathDir);
+
     webDaemonServiceInstance.phpExe = "php-cgi.exe";
     webDaemonServiceInstance.phpExePath = _strdup(pathsPHP->paths[0]);
     webDaemonServiceInstance.phpExeDirectory = _strdup(phpBinDirectory);
+    webDaemonServiceInstance.phpConfDirectory = _strdup(phpFullPathDir);
+    webDaemonServiceInstance.phpIniFile = _strdup(phpIniFilePath);
+    webDaemonServiceInstance.phpVersion = _strdup(serviceUse->php);
 
     freePathList(pathsPHP);
     bPHPRunning = true;
+
+    write_ini_file("config/base.ini", "PHP", "Version", serviceUse->php);
+    write_ini_file("config/base.ini", "PHP", "LastConfDir", phpFullPathDir);
+    write_ini_file("config/base.ini", "PHP", "LastPHPIni", phpIniFilePath);
 
     return 0;
 }
@@ -352,13 +368,23 @@ DWORD mysqlServiceProcess(ServiceUseConfig* serviceUse, bool* bMysqlInit) {
         ErrOutput("Mysql start fail.\r\n");
     }
 
+    char* programDirectory = get_current_program_directory_with_forward_slash();
+
+    char mysqlFullPathDir[256];
+    sprintf_s(mysqlFullPathDir, sizeof(mysqlFullPathDir), "%s/%s", programDirectory, mysqldDirectoryPath);
+
     webDaemonServiceInstance.mysqldExe = "mysqld.exe";
     webDaemonServiceInstance.mysqldExePath = _strdup(pathsMysql->paths[0]);
     webDaemonServiceInstance.mysqldExeDirectory = _strdup(mysqldBinDirectory);
+    webDaemonServiceInstance.mysqldConfDirectory = _strdup(mysqlFullPathDir);
+    webDaemonServiceInstance.mysqldVersion = _strdup(serviceUse->mysql);
 
     bMysqlRunning = true;
 
     freePathList(pathsMysql);
+
+    write_ini_file("config/base.ini", "Mysql", "Version", serviceUse->mysql);
+    write_ini_file("config/base.ini", "Mysql", "LastConfDir", mysqlFullPathDir);
 
     return 0;
 }
@@ -415,13 +441,13 @@ DWORD webServiceProcess(ServiceUseConfig* serviceUse) {
 
     char serviceConfDir[512];
     char serviceVhostsFile[512];
-    char* wProgramDirectory = get_current_program_directory_with_forward_slash();
+    char* programDirectory = get_current_program_directory_with_forward_slash();
     if (strncmp(serviceUse->webService, "httpd", 5) == 0) {
-        sprintf_s(serviceConfDir, sizeof(serviceConfDir), "%s/%s/Apache24/conf/extra", wProgramDirectory, webServiceDirectoryPath);
+        sprintf_s(serviceConfDir, sizeof(serviceConfDir), "%s/%s/Apache24/conf/extra", programDirectory, webServiceDirectoryPath);
         sprintf_s(serviceVhostsFile, sizeof(serviceVhostsFile), "%s/httpd-vhosts.conf", serviceConfDir);
     }
     else {
-        sprintf_s(serviceConfDir, sizeof(serviceConfDir), "%s/%s/conf", wProgramDirectory, webServiceDirectoryPath);
+        sprintf_s(serviceConfDir, sizeof(serviceConfDir), "%s/%s/conf", programDirectory, webServiceDirectoryPath);
         sprintf_s(serviceVhostsFile, sizeof(serviceVhostsFile), "%s/vhosts/default.conf", serviceConfDir);
     }
 
@@ -512,11 +538,25 @@ void freeWebDaemonServiceInstance(WebDaemonService* webDaemonService) {
     if (webDaemonService->phpExe != NULL) {
         free((void*)webDaemonService->phpExePath);
         free((void*)webDaemonService->phpExeDirectory);
+        free((void*)webDaemonService->phpConfDirectory);
+        free((void*)webDaemonService->phpIniFile);
+        free((void*)webDaemonService->phpVersion);
+        webDaemonService->phpExePath = NULL;
+        webDaemonService->phpExeDirectory = NULL;
+        webDaemonService->phpConfDirectory = NULL;
+        webDaemonService->phpIniFile = NULL;
+        webDaemonService->phpVersion = NULL;
     }
 
     if (webDaemonService->mysqldExe != NULL) {
         free((void*)webDaemonService->mysqldExePath);
         free((void*)webDaemonService->mysqldExeDirectory);
+        free((void*)webDaemonService->mysqldConfDirectory);
+        free((void*)webDaemonService->mysqldVersion);
+        webDaemonService->mysqldExePath = NULL;
+        webDaemonService->mysqldExeDirectory = NULL;
+        webDaemonService->mysqldConfDirectory = NULL;
+        webDaemonService->mysqldVersion = NULL;
     }
 
     if (webDaemonService->webServiceExe != NULL) {
@@ -524,6 +564,11 @@ void freeWebDaemonServiceInstance(WebDaemonService* webDaemonService) {
         free((void*)webDaemonService->webServiceExeDirectory);
         free((void*)webDaemonService->webServiceConfDirectory);
         free((void*)webDaemonService->webServiceVhostsFile);
+        webDaemonService->webServiceExePath = NULL;
+        webDaemonService->webServiceExeDirectory = NULL;
+        webDaemonService->webServiceConfDirectory = NULL;
+        webDaemonService->webServiceConfDirectory = NULL;
+        webDaemonService->webServiceVhostsFile = NULL;
     }
 }
 

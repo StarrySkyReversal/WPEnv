@@ -13,6 +13,7 @@
 #include "Compression.h"
 #include <errno.h>
 #include "DownloadThread.h"
+#include "IniOpt.h"
 
 
 DWORD phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* result, size_t bufferSize) {
@@ -270,7 +271,6 @@ DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 		}
 	}
 
-
 	if (
 		!(
 			(softwareGroupInfo.php.version != NULL && softwareGroupInfo.mysql.version != NULL && softwareGroupInfo.apache.version != NULL) ||
@@ -324,31 +324,60 @@ DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 	char phpIniPath[256];
 	sprintf_s(phpIniPath, sizeof(phpIniPath), "%s/service/php/%s/php.ini", wProgramDirectory, softwareGroupInfo.php.version);
 
-	if (versionMatch("php", softwareGroupInfo.php.versionNumber, phpIniPath, softwareGroupInfo) != 0) {
-		return -1;
+	char initPHPIniKey[256];
+	sprintf_s(initPHPIniKey, sizeof(initPHPIniKey), "%s-php.ini", softwareGroupInfo.php.version);
+
+	if (!checkKeyValueExists("config/base.ini", "Init", initPHPIniKey, "1")) {
+		if (versionMatch("php", softwareGroupInfo.php.versionNumber, phpIniPath, softwareGroupInfo) != 0) {
+			return -1;
+		}
+
+		write_ini_file("config/base.ini", "Init", initPHPIniKey, "1");
 	}
 
 	if (softwareGroupInfo.apache.version != NULL) {
 		// apache
 		char httpdConfPath[256];
 		sprintf_s(httpdConfPath, sizeof(httpdConfPath), "%s/service/apache/%s/Apache24/conf/httpd.conf", wProgramDirectory, softwareGroupInfo.apache.version);
-		if (versionMatch("apache", softwareGroupInfo.apache.versionNumber, httpdConfPath, softwareGroupInfo) != 0) {
-			return -1;
+		
+		char initHttpdConfKey[256];
+		sprintf_s(initHttpdConfKey, sizeof(initHttpdConfKey), "%s-httpd.conf", softwareGroupInfo.apache.version);
+
+		if (!checkKeyValueExists("config/base.ini", "Init", initHttpdConfKey, "1")) {
+			if (versionMatch("apache", softwareGroupInfo.apache.versionNumber, httpdConfPath, softwareGroupInfo) != 0) {
+				return -1;
+			}
+
+			write_ini_file("config/base.ini", "Init", initHttpdConfKey, "1");
 		}
 
 		char httpdVhostsConf[256];
 		sprintf_s(httpdVhostsConf, sizeof(httpdVhostsConf), "%s/service/apache/%s/Apache24/conf/extra/httpd-vhosts.conf", wProgramDirectory, softwareGroupInfo.apache.version);
 
-		if (versionMatch("apache", "vhosts", httpdVhostsConf, softwareGroupInfo) != 0) {
-			return -1;
+		char initHttpdVhostsConfKey[256];
+		sprintf_s(initHttpdVhostsConfKey, sizeof(initHttpdVhostsConfKey), "%s-httpd.vhosts.conf", softwareGroupInfo.apache.version);
+		if (!checkKeyValueExists("config/base.ini", "Init", initHttpdVhostsConfKey, "1")) {
+			if (versionMatch("apache", "vhosts", httpdVhostsConf, softwareGroupInfo) != 0) {
+				return -1;
+			}
+
+			write_ini_file("config/base.ini", "Init", initHttpdVhostsConfKey, "1");
 		}
 	}
 	else {
 		// nginx
 		char nginxConfPath[256];
 		sprintf_s(nginxConfPath, sizeof(nginxConfPath), "%s/service/nginx/%s/conf/nginx.conf", wProgramDirectory, softwareGroupInfo.nginx.version);
-		if (versionMatch("nginx", softwareGroupInfo.nginx.version, nginxConfPath, softwareGroupInfo) != 0) {
-			return -1;
+
+		char initNginxConfKey[256];
+		sprintf_s(initNginxConfKey, sizeof(initNginxConfKey), "%s-nginx.conf", softwareGroupInfo.nginx.version);
+
+		if (!checkKeyValueExists("config/base.ini", "Init", initNginxConfKey, "1")) {
+			if (versionMatch("nginx", softwareGroupInfo.nginx.version, nginxConfPath, softwareGroupInfo) != 0) {
+				return -1;
+			}
+
+			write_ini_file("config/base.ini", "Init", initNginxConfKey, "1");
 		}
 
 		char nginxVhostsDir[256];
@@ -370,8 +399,16 @@ DWORD SyncConfigTemplate(SoftwareGroupInfo softwareGroupInfo) {
 
 		char nginxVhostsConf[256];
 		sprintf_s(nginxVhostsConf, sizeof(nginxVhostsConf), "%s/service/nginx/%s/conf/vhosts/default.conf", wProgramDirectory, softwareGroupInfo.nginx.version);
-		if (versionMatch("nginx", "vhosts", nginxVhostsConf, softwareGroupInfo) != 0) {
-			return -1;
+		
+		char initNginxVhostsConfKey[256];
+		sprintf_s(initNginxVhostsConfKey, sizeof(initNginxVhostsConfKey), "%s-nginx.vhosts.conf", softwareGroupInfo.nginx.version);
+		
+		if (!checkKeyValueExists("config/base.ini", "Init", initNginxVhostsConfKey, "1")) {
+			if (versionMatch("nginx", "vhosts", nginxVhostsConf, softwareGroupInfo) != 0) {
+				return -1;
+			}
+
+			write_ini_file("config/base.ini", "Init", initNginxVhostsConfKey, "1");
 		}
 	}
 

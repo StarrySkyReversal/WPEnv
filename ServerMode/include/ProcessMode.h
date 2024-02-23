@@ -12,10 +12,15 @@ typedef struct {
     const char* phpExe;
     const char* phpExePath;
     const char* phpExeDirectory;
+    const char* phpConfDirectory;
+    const char* phpIniFile;
+    const char* phpVersion;
 
     const char* mysqldExe;
     const char* mysqldExePath;
     const char* mysqldExeDirectory;
+    const char* mysqldConfDirectory;
+    const char* mysqldVersion;
 
     const char* webServiceExe;
     const char* webServiceExePath;
