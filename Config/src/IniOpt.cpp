@@ -63,58 +63,86 @@ bool is_section(const char* line, const char* section) {
 }
 
 int write_ini_file(const char* filename, const char* section, const char* key, const char* value) {
+    const int MAX_LINE = 1024;
+    char tempFilename[] = "temp.ini";
+    char line[MAX_LINE];
+    int sectionFound = 0, keyFound = 0;
     FILE* file;
-    char line[MAX_LINE_LENGTH];
-    char new_content[MAX_LINE_LENGTH * 256] = "";
-    bool section_found = false;
+    fopen_s(&file, filename, "r");
+    FILE* tempFile;
+    fopen_s(&tempFile, tempFilename, "w");
 
-    errno_t err;
-
-    bool new_section_found = false;
-    bool new_key_found = false;
-
-    // Opening a file in read mode
-    err = fopen_s(&file, filename, "r+N");
-    if (err == 0) {
-        // Read existing content
-        while (fgets(line, sizeof(line), file)) {
-            if (!section_found) {
-                if (is_section(line, section)) {
-                    section_found = true;
-                    new_section_found = true;
-                }
-            }
-            else if (line[0] == '[') {
-                section_found = false;
-            }
-
-            if (section_found && strncmp(line, key, strlen(key)) == 0 && line[strlen(key)] == '=') {
-                new_key_found = true;
-                snprintf(line, sizeof(line), "%s=%s\n", key, value); // Replacement of key values
-            }
-
-            strcat_s(new_content, sizeof(new_content), line);
+    if (!file) {
+        fopen_s(&file, filename, "w+");
+        if (!file) {
+            if (tempFile) fclose(tempFile);
+            return -1;
         }
+
+        // The file has just been created, so the section and key must not exist, so add them directly.
+        fprintf(file, "[%s]\n%s=%s\n", section, key, value);
         fclose(file);
+        if (tempFile) fclose(tempFile);
+        return 0;
     }
 
-    // Contents of the modification
-    if (!new_section_found) {
-        snprintf(new_content + strlen(new_content), sizeof(new_content) - strlen(new_content), "[%s]\n", section);
-    }
-    if (!new_key_found) {
-        snprintf(new_content + strlen(new_content), sizeof(new_content) - strlen(new_content), "%s=%s\n", key, value);
-    }
-
-    // Open the file in write mode and write the modified content
-    err = fopen_s(&file, filename, "w+N");
-    if (err != 0) {
-        Log("Error opening file for writing");
+    if (!tempFile) {
+        fprintf(stderr, "Error creating temporary file.\n");
+        fclose(file);
         return -1;
     }
 
-    fwrite(new_content, 1, strlen(new_content), file);
+    char sectionLine[MAX_LINE];
+    snprintf(sectionLine, sizeof(sectionLine), "[%s]", section);
+    char keyLine[MAX_LINE];
+    snprintf(keyLine, sizeof(keyLine), "%s=", key);
+
+    while (fgets(line, MAX_LINE, file) != NULL) {
+        if (!sectionFound) {
+            // find a section
+            if (strncmp(line, sectionLine, strlen(sectionLine)) == 0) {
+                sectionFound = 1;
+                fprintf(tempFile, "%s", line); // Write to section
+                continue;
+            }
+        }
+        else if (!keyFound) {
+            // Check if you have reached the next section or the end of the file
+            if (line[0] == '[' || feof(file)) {
+                if (!keyFound && value != NULL) {
+                    // Add key=value at the end of the current section
+                    fprintf(tempFile, "%s=%s\n", key, value);
+                    keyFound = 1; // Prevent duplicate additions
+                }
+                if (line[0] == '[') {
+                    fprintf(tempFile, "%s", line); // Write to the next section of the line
+                }
+                continue;
+            }
+            else if (strncmp(line, keyLine, strlen(keyLine)) == 0) {
+                keyFound = 1; // Find the key.
+                if (value) {
+                    fprintf(tempFile, "%s=%s\n", key, value);
+                    continue;
+                }
+            }
+        }
+        fprintf(tempFile, "%s", line);
+    }
+
+    // If it's at the end of the file and neither section nor key is found, add them.
+    if (!sectionFound && value) {
+        fprintf(tempFile, "[%s]\n%s=%s\n", section, key, value);
+    }
+    else if (sectionFound && !keyFound && value) {
+        fprintf(tempFile, "%s=%s\n", key, value);
+    }
+
     fclose(file);
+    fclose(tempFile);
+
+    remove(filename);
+    rename(tempFilename, filename);
 
     return 0;
 }

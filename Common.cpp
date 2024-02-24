@@ -92,7 +92,7 @@ BOOL CheckVersionSystemEnable(const char* str) {
 
     BOOL isX64 = Is64BitWindows();
 
-    int len = strlen(str);
+    size_t len = strlen(str);
 
     char lastThree[4];
     strncpy_s(lastThree, str + len - 3, 3);
