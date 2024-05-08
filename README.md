@@ -48,7 +48,7 @@ Ensure that you install the appropriate Visual C++ Redistributable version corre
 - **x32:** Refers to 32-bit architecture (also known as x86). Choose this version if you are running a 32-bit operating system. It's compatible with older hardware and systems with less memory.
 
 ## Application UI
-![Example Image](application_ui.jpg)
+![Example Image](application_ui.png)
 
 ## Required Dependencies
 
