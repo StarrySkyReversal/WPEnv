@@ -119,6 +119,12 @@ void InitializeServiceSource() {
     const char* jsonTxt = R"(
 {
     "php": [
+
+        {"php-8.4.0_nts-vs17-x64":"https://windows.php.net/downloads/releases/archives/php-8.4.0-nts-Win32-vs17-x64.zip"},
+        {"php-8.4.0_nts-vs17-x86":"https://windows.php.net/downloads/releases/archives/php-8.4.0-nts-Win32-vs17-x86.zip"},
+        {"php-8.4.0_ts-vs17-x64":"https://windows.php.net/downloads/releases/archives/php-8.4.0-Win32-vs17-x64.zip"},
+        {"php-8.4.0_ts-vs17-x86":"https://windows.php.net/downloads/releases/archives/php-8.4.0-Win32-vs17-x86.zip"},
+
         {"php-8.3.0_nts-vs16-x64":"https://windows.php.net/downloads/releases/archives/php-8.3.0-nts-Win32-vs16-x64.zip"},
         {"php-8.3.0_nts-vs16-x86":"https://windows.php.net/downloads/releases/archives/php-8.3.0-nts-Win32-vs16-x86.zip"},
         {"php-8.3.0_ts-vs16-x64":"https://windows.php.net/downloads/releases/archives/php-8.3.0-Win32-vs16-x64.zip"},
@@ -170,8 +176,10 @@ void InitializeServiceSource() {
         {"php-5.5.0_ts-vc11-x86":"https://windows.php.net/downloads/releases/archives/php-5.5.0-Win32-VC11-x86.zip"}
     ],
     "mysql": [
+        {"mysql-8.4.4-winx64":"https://dev.mysql.com/get/Downloads/MySQL-8.4/mysql-8.4.4-winx64.zip"},
         {"mysql-5.7.43-x64":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.43-winx64.zip"},
         {"mysql-5.7.43-x86":"https://downloads.mysql.com/archives/get/p/23/file/mysql-5.7.43-win32.zip"}
+
     ],
     "apache": [
         {"httpd-2.4.58_vs17-x64":"https://www.apachelounge.com/download/VS17/binaries/httpd-2.4.58-win64-VS17.zip"},

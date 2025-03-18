@@ -20,6 +20,7 @@ DWORD phpApacheDll(const char* phpVersion, const char* serviceVersionDir, char* 
 	char dllFilePath[512];
 
 	if (
+		strcmp(phpVersion, "php-8.4.0") == 0 ||
 		strcmp(phpVersion, "php-8.3.0") == 0 ||
 		strcmp(phpVersion, "php-8.2.0") == 0 ||
 		strcmp(phpVersion, "php-8.1.0") == 0 ||

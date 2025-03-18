@@ -109,7 +109,8 @@ DWORD CurlMultipleDownloadThread(LPVOID param, const int numSubPartSize) {
 	headers = curl_slist_append(headers, "Cache-Control: no-cache");
 	headers = curl_slist_append(headers, "Accept: */*");
 	//headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate, br");
-	headers = curl_slist_append(headers, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
+	//headers = curl_slist_append(headers, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
+	headers = curl_slist_append(headers, "User-Agent: curl/8.11.0");
 
 	CURLM* multi_handle = curl_multi_init();
 
@@ -217,7 +218,7 @@ unsigned long long CurlGetRemoteFileSize(const char* url) {
 	CURLcode res;
 	curl = curl_easy_init();
 	if (!curl) {
-		MessageBoxA(NULL, "OK1", NULL, 0);
+		MessageBoxA(NULL, "CURL error", NULL, 0);
 		Log("CURL create fail\r\n");
 		return 0;
 	}
@@ -230,7 +231,8 @@ unsigned long long CurlGetRemoteFileSize(const char* url) {
 	headers = curl_slist_append(headers, "Cache-Control: no-cache");
 	headers = curl_slist_append(headers, "Accept: */*");
 	//headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate, br");
-	headers = curl_slist_append(headers, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
+	//headers = curl_slist_append(headers, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36");
+	headers = curl_slist_append(headers, "User-Agent: curl/8.11.0");
 
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_RANGE, "0-0");
@@ -246,10 +248,10 @@ unsigned long long CurlGetRemoteFileSize(const char* url) {
 	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 10L);
 	curl_easy_setopt(curl, CURLOPT_AUTOREFERER, 1L);
 	//curl_easy_setopt(curl, CURLOPT_SSLENGINE_DEFAULT, 1L);
-	//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
 	//FILE* debug_file;
 	//fopen_s(&debug_file, "curl_debug_output.txt", "w+");
+	// 	//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 	//curl_easy_setopt(curl, CURLOPT_STDERR, debug_file);
 
 	res = curl_easy_perform(curl);
