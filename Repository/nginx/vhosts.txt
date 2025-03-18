@@ -1,8 +1,8 @@
 server {
     listen       80;
-    server_name  "{{TPL_VAR:ServerName}}";
+    server_name  {{TPL_VAR:ServerName}};
 	
-    root  {{TPL_VAR:DocumentRoot}};
+    root  "{{TPL_VAR:DocumentRoot}}";
     index index.php index.html index.htm;
 
     location / {
