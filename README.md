@@ -62,10 +62,3 @@ For development, you need to install the following packages with vcpkg:
 ## License
 This project is licensed under the MIT License. See the LICENSE.md file for details.
 
-## Acknowledgements
-
-This project is primarily developed using Visual Studio 2022. We also use tools from the JetBrains All Products Pack to support various aspects of our development workflow.
-
-This project is supported by [JetBrains](https://www.jetbrains.com/).
-
-![JetBrains logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.png)
